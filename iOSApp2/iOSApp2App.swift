@@ -8,10 +8,13 @@
 import SwiftUI
 
 @main
-struct iOSApp2App: App {
+struct HeartOfTheWildApp: App {
+    @StateObject private var gameState = GameState()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(gameState)
         }
     }
 }
