@@ -7,25 +7,70 @@
 
 import Foundation
 
+/// Represents the possible endings of the game.
+///
+/// The ending depends on how much the player completes before submitting
+/// their final scavenger hunt results.
+///
+/// In this project, endings are mainly based on:
+/// - how many hidden photo symbols the player captures
+/// - whether the curator name puzzle is solved
+/// - how much evidence has been recovered
 enum GameEnding {
+    
+    /// The weakest ending.
+    ///
+    /// This ending happens when the player does not recover enough historical
+    /// symbols or evidence to help the museum.
     case museumLost
+    
+    /// A middle ending.
+    ///
+    /// This ending happens when the player recovers some important evidence,
+    /// but not enough to fully complete the exhibit.
     case partialExhibit
+    
+    /// A strong ending.
+    ///
+    /// This ending happens when the player collects enough photo symbols and
+    /// evidence to save the museum.
     case museumSaved
+    
+    /// The best ending.
+    ///
+    /// This ending happens when the player fully completes the scavenger hunt,
+    /// solves the curator clue, and recovers the most important parts of the mystery.
     case legendaryLegacy
     
+    
+    // MARK: - Display Title
+    
+    /// The title shown to the player on the ending/results screen.
+    ///
+    /// Each case returns a short dramatic title that summarizes the player's result.
     var title: String {
         switch self {
         case .museumLost:
             return "The Museum Is Lost"
+            
         case .partialExhibit:
             return "A Fragile Exhibit Opens"
+            
         case .museumSaved:
             return "The Museum Is Saved"
+            
         case .legendaryLegacy:
             return "The Legend Lives Forever"
         }
     }
     
+    
+    // MARK: - Ending Description
+    
+    /// The story text shown for this ending.
+    ///
+    /// This gives the player feedback about how their choices and collected
+    /// evidence affected the museum's future.
     var description: String {
         switch self {
         case .museumLost:
