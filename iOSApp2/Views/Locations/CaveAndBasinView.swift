@@ -7,93 +7,85 @@
 
 import SwiftUI
 
-/// CaveAndBasinView displays the Cave and Basin investigation scene.
-///
-/// This location has two separate systems:
-///
-/// 1. Story progression hotspots:
-///    - sign
-///    - towel
-///    - glowing crack
-///    - pool object
-///
-/// 2. Optional photo scavenger hunt hotspot:
-///    - photo_symbol
-///
-/// The optional photo symbol is not required for story progression,
-/// but it counts toward discount rewards and endings.
 struct CaveAndBasinView: View {
     
-    // MARK: - Shared Game State
-    
-    /// The global game state shared across the app.
     @EnvironmentObject private var gameState: GameState
     
     
-    // MARK: - View State
+    // MARK: - State
     
-    /// Controls whether the inventory sheet is visible.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether a normal text alert is visible.
     @State private var showingAlert = false
-    
-    /// The title shown in the current alert.
     @State private var alertTitle = ""
-    
-    /// The message shown in the current alert.
     @State private var alertMessage = ""
     
-    /// When this has a value, the fake camera opens for that photo symbol.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
+    @State private var activeZoomOverlay: CaveAndBasinZoomOverlay?
+    @State private var collectedItemOverlay: InventoryItem?
     
     
-    // MARK: - Scene Setup
+    // MARK: - Scene Data
     
-    /// The original size of the background artwork.
-    ///
-    /// All hotspot coordinates are based on this canvas size.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// All tappable regions in this scene.
-    ///
-    /// These rectangles are positioned using coordinates from the original
-    /// `1290 x 2796` background image.
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
-            id: "pool_object",
-            name: "Dark Object",
-            rect: CGRect(x: 654, y: 1760, width: 198, height: 161)
+            id: "submerged_chest",
+            name: "Submerged Chest",
+            rect: CGRect(x: 616, y: 1704, width: 204, height: 185)
         ),
-        
         SceneHotspot(
-            id: "gold_crack",
-            name: "Glowing Crack",
-            rect: CGRect(x: 123, y: 994, width: 123, height: 224)
+            id: "vent",
+            name: "Cave Vent Hole",
+            rect: CGRect(x: 266, y: 246, width: 706, height: 541)
         ),
-        
         SceneHotspot(
-            id: "sign",
-            name: "Sign",
-            rect: CGRect(x: 38, y: 1866, width: 281, height: 222)
+            id: "squirrel",
+            name: "Squirrel in Cozy Nook",
+            rect: CGRect(x: 1033, y: 1009, width: 221, height: 335)
         ),
-        
         SceneHotspot(
-            id: "towel",
-            name: "Towel",
-            rect: CGRect(x: 1099, y: 1301, width: 163, height: 227)
+            id: "bats",
+            name: "Bats",
+            rect: CGRect(x: 176, y: 717, width: 150, height: 298)
         ),
-        
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 540, y: 1260, width: 220, height: 220)
+            id: "plaque",
+            name: "Plaque",
+            rect: CGRect(x: 55, y: 1981, width: 382, height: 264)
         )
     ]
     
-    /// Finds the StoryLead connected to Cave and Basin.
-    private var caveLead: StoryLead? {
-        gameState.lead(for: .caveAndBasin)
+    
+    // MARK: - Active Scene Layers
+    
+    private var activeHotspots: [SceneHotspot] {
+        hotspots.filter { hotspot in
+            switch hotspot.id {
+            case "submerged_chest":
+                return !gameState.hasCollectedVintageBrassToken
+            default:
+                return true
+            }
+        }
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        var overlays: [SceneOverlayObject] = []
+        
+        if gameState.hasOpenedBasinChest {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "chest_open",
+                    imageName: "basin_chest_open_overlay",
+                    rect: CGRect(x: 587, y: 1598, width: 313, height: 315)
+                )
+            )
+        }
+        
+        return overlays
     }
     
     
@@ -101,127 +93,114 @@ struct CaveAndBasinView: View {
     
     var body: some View {
         ZStack {
-            // Background image plus invisible rectangular hotspots.
             ImageSceneView(
-                imageName: "cave_and_basin",
+                imageName: "cave_and_basin_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
-                
-                // Change this to true while adjusting hotspot placement.
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
                 showDebugHotspots: false,
-                
                 onHotspotTapped: handleHotspotTapped
             )
             
-            // Top HUD with title and inventory button.
             TopHUDView(
                 locationTitle: "Cave and Basin",
-                locationSubtitle: "Steam, stone, and hidden traces",
+                locationSubtitle: "Steam, stone, and old beginnings",
                 onBagTapped: {
                     showingInventory = true
+                },
+                onJournalTapped: {
+                    showingJournal = true
                 }
             )
             
-            // Bottom return button and progress labels.
-            bottomControls
+            returnButton
+            
+            if let activeZoomOverlay {
+                zoomOverlay(for: activeZoomOverlay)
+            }
+            
+            if let collectedItemOverlay {
+                ItemCollectedOverlay(item: collectedItemOverlay) {
+                    self.collectedItemOverlay = nil
+                }
+            }
         }
-        
-        // Inventory sheet.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
         
-        // General alert for story interactions.
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
+                .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
+        }
+        
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK") { }
         } message: {
             Text(alertMessage)
         }
-        
-        // Fake camera screen for the optional photo scavenger hunt symbol.
-        //
-        // Important:
-        // This modifier belongs here in the body, not inside handleHotspotTapped.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
+        .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { capturedSymbol in
-                    gameState.photographSymbol(capturedSymbol)
+                photo: photo,
+                alreadyCaptured: gameState.hasPhoto(photo),
+                onCapture: { capturedPhoto in
+                    gameState.capturePhoto(capturedPhoto)
                 }
             )
         }
     }
     
     
-    // MARK: - Bottom Controls
+    // MARK: - Return Button
     
-    /// Displays optional progress labels and the return-to-museum button.
-    private var bottomControls: some View {
+    private var returnButton: some View {
         VStack {
             Spacer()
             
-            VStack(spacing: 10) {
-                
-                // Show when the required Cave and Basin story lead is complete.
-                if let caveLead, gameState.isLeadCompleted(caveLead) {
-                    Label("Cave and Basin lead complete", systemImage: "checkmark.seal.fill")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color.green)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.black.opacity(0.55))
-                        .clipShape(Capsule())
-                }
-                
-                // Show when the pool object has been recovered with the net.
-                if gameState.hasRecoveredCavePoolObject {
-                    Label("Submerged clue recovered", systemImage: "map.fill")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color.yellow)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.black.opacity(0.55))
-                        .clipShape(Capsule())
-                }
-                
-                // Return to the museum hub.
-                Button {
-                    gameState.currentLocation = .museumInterior
-                } label: {
-                    Label("Return to Museum", systemImage: "arrow.uturn.left")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.horizontal)
+            Button {
+                gameState.currentLocation = .museumInterior
+            } label: {
+                Label("Return to Museum", systemImage: "arrow.uturn.left")
+                    .frame(maxWidth: .infinity)
             }
-            .padding(.bottom, 24)
+            .buttonStyle(.borderedProminent)
+            .padding()
         }
     }
     
     
-    // MARK: - Hotspot Routing
+    // MARK: - Hotspot Handling
     
-    /// Called whenever one of the rectangular hotspots is tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
-        case "sign":
-            handleSignTapped()
+        case "submerged_chest":
+            activeZoomOverlay = gameState.hasInventoryItem(.gaffHook)
+                ? .submergedChestWithHook
+                : .submergedChestNeedsHook
             
-        case "towel":
-            handleTowelTapped()
+        case "vent":
+            activePhoto = Photo.caveAndBasin
             
-        case "gold_crack":
-            handleGoldCrackTapped()
+        case "squirrel":
+            showAlert(
+                title: "Cozy Squirrel",
+                message: "A squirrel has found the warmest nook in the cave and seems deeply unwilling to give up the lease."
+            )
             
-        case "pool_object":
-            handlePoolObjectTapped()
+        case "bats":
+            showAlert(
+                title: "Bats",
+                message: "The bats hang quietly in the mineral-scented dark, ignoring both tourism and legend."
+            )
             
-        case "photo_symbol":
-            // Opens the fake camera for the optional photo scavenger hunt.
-            activePhotoSymbol = .caveAndBasin
+        case "plaque":
+            showAlert(
+                title: "Historic Plaque",
+                message: "The plaque explains the official beginning of Canada's national park system. The cave itself feels much older than any plaque."
+            )
             
         default:
             break
@@ -229,192 +208,64 @@ struct CaveAndBasinView: View {
     }
     
     
-    // MARK: - Story Hotspot Handlers
+    // MARK: - Zoom Overlays
     
-    /// Handles the Cave and Basin sign.
-    ///
-    /// This is story evidence, not the optional photo scavenger hunt symbol.
-    private func handleSignTapped() {
-        if gameState.hasEvidence(EvidenceItem.caveSignPhoto.id) {
-            showAlert(
-                title: "Sign Already Photographed",
-                message: """
-                You already photographed the Cave and Basin sign.
-
-                The date and wording may matter later. The museum curator will want to see this.
-                """
+    @ViewBuilder
+    private func zoomOverlay(for overlay: CaveAndBasinZoomOverlay) -> some View {
+        switch overlay {
+        case .submergedChestNeedsHook:
+            HotspotZoomOverlay(
+                title: "Submerged Chest",
+                imageName: "zoom_basin_chest",
+                description: "A small chest rests below the surface of the steaming pool. It is too far down to reach by hand.",
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeZoomOverlay = nil
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
             )
-            return
-        }
-        
-        gameState.collectEvidence(.caveSignPhoto)
-        
-        let completionText = updateCaveLeadCompletionIfNeeded()
-        
-        showAlert(
-            title: "Photograph Taken",
-            message: """
-            You photograph the historic sign.
-
-            Banff’s official story begins here, with mineral springs, surveyors, and protected land.
-
-            But the warm cave feels older than the sign suggests.
-            \(completionText)
-            """
-        )
-    }
-    
-    /// Handles collecting the old towel from the rocks.
-    private func handleTowelTapped() {
-        if gameState.hasInventoryItem(InventoryItem.oldTowel.id) {
-            showAlert(
-                title: "Bare Rocks",
-                message: "You already took the old towel from the rocks."
+            
+        case .submergedChestWithHook:
+            HotspotZoomOverlay(
+                title: "Submerged Chest",
+                imageName: "zoom_basin_chest",
+                description: "The gaff hook pries the chest open. You notice a brassy vintage token inside.",
+                primaryButtonTitle: "Take Token",
+                onPrimaryAction: {
+                    gameState.hasOpenedBasinChest = true
+                    gameState.useInventoryItem(.gaffHook)
+                    gameState.collectInventoryItem(.vintageBrassToken)
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .vintageBrassToken
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
             )
-            return
-        }
-        
-        gameState.addInventoryItem(.oldTowel)
-        
-        showAlert(
-            title: "Old Towel Collected",
-            message: """
-            You lift the towel from the rocks.
-
-            It is stiff with dried mineral water, but the fabric is still usable.
-
-            Added to your bag:
-            Old Towel
-            """
-        )
-    }
-    
-    /// Handles the glowing crack in the wall.
-    ///
-    /// The player needs the old towel before they can collect the gold dust.
-    private func handleGoldCrackTapped() {
-        if gameState.hasEvidence(EvidenceItem.goldDustedCloth.id) {
-            showAlert(
-                title: "Gold Dust Collected",
-                message: """
-                The glowing crack still catches the light, but you already collected a sample of the fine metallic dust.
-                """
-            )
-            return
-        }
-        
-        guard gameState.hasInventoryItem(InventoryItem.oldTowel.id) else {
-            showAlert(
-                title: "Glowing Crack",
-                message: """
-                A narrow crack glows faintly in the wet stone.
-
-                At first it looks like reflected lamplight, but the color is warmer. Metallic.
-
-                Fine gold-colored dust has settled in the mineral crust.
-
-                It is too fine to collect by hand. You need something cloth-like to catch it.
-                """
-            )
-            return
-        }
-        
-        gameState.collectEvidence(.goldDustedCloth)
-        
-        let completionText = updateCaveLeadCompletionIfNeeded()
-        
-        showAlert(
-            title: "Gold-Dusted Cloth",
-            message: """
-            You press the old towel carefully against the glowing seam.
-
-            When you pull it away, the fibers glitter with fine gold-colored dust.
-
-            This may be the first physical clue that the Lost Lemon Mine stories are not just stories.
-            \(completionText)
-            """
-        )
-    }
-    
-    /// Handles the dark object at the bottom of the pool.
-    ///
-    /// The player needs the long-handled net from Bow Falls before retrieving it.
-    private func handlePoolObjectTapped() {
-        if gameState.hasEvidence(EvidenceItem.sealedOilclothFragment.id) {
-            showAlert(
-                title: "Pool Checked",
-                message: """
-                The dark object has already been retrieved from the bottom of the pool.
-
-                The water is still, warm, and strangely clear.
-                """
-            )
-            return
-        }
-        
-        guard gameState.hasInventoryItem(InventoryItem.longHandledNet.id) else {
-            showAlert(
-                title: "Dark Object Below",
-                message: """
-                Something dark rests at the bottom of the hot pool, near the center.
-
-                The water is too deep and too hot to reach safely.
-
-                You need something long-handled to retrieve it.
-                """
-            )
-            return
-        }
-        
-        gameState.collectEvidence(.sealedOilclothFragment)
-        
-        showAlert(
-            title: "Oilcloth Fragment Retrieved",
-            message: """
-            You lower the long-handled net into the hot pool and carefully scoop up the dark object.
-
-            It is a sealed fragment of old oilcloth, water-darkened and heavy.
-
-            Something appears to be protected inside.
-
-            This feels important — not just for Cave and Basin, but for the pattern the museum curator is trying to uncover.
-            """
-        )
-    }
-    
-    
-    // MARK: - Lead Completion Helper
-    
-    /// Checks if Cave and Basin now has all required evidence.
-    ///
-    /// Required Cave and Basin story evidence:
-    /// - Cave sign photo
-    /// - Gold-dusted cloth
-    ///
-    /// The oilcloth fragment is important for unlocking later locations,
-    /// but it is not required to mark Cave and Basin itself as complete.
-    private func updateCaveLeadCompletionIfNeeded() -> String {
-        guard let caveLead else { return "" }
-        
-        let wasCompleted = gameState.isLeadCompleted(caveLead)
-        gameState.completeLeadIfNeeded(caveLead)
-        let isNowCompleted = gameState.isLeadCompleted(caveLead)
-        
-        if !wasCompleted && isNowCompleted {
-            return "\n\nCave and Basin lead complete."
-        } else {
-            return ""
         }
     }
     
     
-    // MARK: - Alert Helper
+    // MARK: - Alerts
     
-    /// Convenience function for showing alerts.
     private func showAlert(title: String, message: String) {
         alertTitle = title
         alertMessage = message
         showingAlert = true
+    }
+}
+
+
+// MARK: - Zoom Overlay Types
+
+private enum CaveAndBasinZoomOverlay: Identifiable {
+    case submergedChestNeedsHook
+    case submergedChestWithHook
+    
+    var id: String {
+        String(describing: self)
     }
 }
 

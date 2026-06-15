@@ -7,74 +7,66 @@
 
 import SwiftUI
 
-/// A decorative overlay that draws random snowflakes across the screen.
-///
-/// `SnowfallOverlay` is meant to sit on top of a scene as a visual effect.
-/// It does not respond to taps, so the player can still interact with buttons
-/// and hotspots underneath it.
-///
-/// This version creates a static snowfall pattern using small white circles.
 struct SnowfallOverlay: View {
     
-    /// The number of snowflakes to draw.
-    ///
-    /// `Array(0..<45)` creates 45 placeholder values.
-    /// Each value is used by `ForEach` to create one snowflake.
-    private let flakes = Array(0..<45)
-    
-    
-    // MARK: - Body
+    private let flakes: [Snowflake] = Snowflake.makeFlakes(count: 60)
     
     var body: some View {
-        GeometryReader { geo in
-            
-            // `GeometryReader` gives access to the available screen size.
-            // That size is used to randomly position each snowflake.
-            ZStack {
+        TimelineView(.animation) { timeline in
+            GeometryReader { geo in
+                let time = timeline.date.timeIntervalSinceReferenceDate
                 
-                // Creates one circle for each snowflake.
-                ForEach(flakes, id: \.self) { _ in
-                    
-                    // A small white circle represents a snowflake.
-                    Circle()
-                    
-                        // Random opacity makes some flakes brighter than others,
-                        // giving the snowfall more depth.
-                        .fill(.white.opacity(Double.random(in: 0.25...0.75)))
-                    
-                        // Random size makes the snowflakes feel less uniform.
-                        .frame(
-                            width: CGFloat.random(in: 2...5),
-                            height: CGFloat.random(in: 2...5)
-                        )
-                    
-                        // Random position places each flake somewhere within
-                        // the available view area.
-                        .position(
-                            x: CGFloat.random(in: 0...geo.size.width),
-                            y: CGFloat.random(in: 0...geo.size.height)
-                        )
+                ZStack {
+                    ForEach(flakes) { flake in
+                        Circle()
+                            .fill(.white.opacity(flake.opacity))
+                            .frame(width: flake.size, height: flake.size)
+                            .position(
+                                x: xPosition(for: flake, time: time, width: geo.size.width),
+                                y: yPosition(for: flake, time: time, height: geo.size.height)
+                            )
+                    }
                 }
             }
         }
-        
-        // Allows taps to pass through the snow overlay.
-        //
-        // Without this, the overlay could block buttons, image hotspots,
-        // or other interactive scene elements underneath it.
+        .ignoresSafeArea()
         .allowsHitTesting(false)
+    }
+    
+    private func xPosition(for flake: Snowflake, time: TimeInterval, width: CGFloat) -> CGFloat {
+        let drift = sin(time * flake.driftSpeed + flake.phase) * flake.driftAmount
+        return flake.xRatio * width + drift
+    }
+    
+    private func yPosition(for flake: Snowflake, time: TimeInterval, height: CGFloat) -> CGFloat {
+        let rawY = flake.yRatio * height + CGFloat(time * flake.fallSpeed).truncatingRemainder(dividingBy: height + 80)
+        return rawY - 40
     }
 }
 
-
-// MARK: - Preview
-
-#Preview {
-    ZStack {
-        
-        // Blue background makes the white snowflakes easy to see in preview.
-        Color.blue.ignoresSafeArea()
-        
-        SnowfallOverlay()
+private struct Snowflake: Identifiable {
+    let id = UUID()
+    let xRatio: CGFloat
+    let yRatio: CGFloat
+    let size: CGFloat
+    let opacity: Double
+    let fallSpeed: Double
+    let driftSpeed: Double
+    let driftAmount: CGFloat
+    let phase: Double
+    
+    static func makeFlakes(count: Int) -> [Snowflake] {
+        (0..<count).map { index in
+            Snowflake(
+                xRatio: CGFloat.random(in: 0...1),
+                yRatio: CGFloat.random(in: 0...1),
+                size: CGFloat.random(in: 2...6),
+                opacity: Double.random(in: 0.22...0.78),
+                fallSpeed: Double.random(in: 18...52),
+                driftSpeed: Double.random(in: 0.4...1.3),
+                driftAmount: CGFloat.random(in: 8...34),
+                phase: Double(index) * 0.7
+            )
+        }
     }
 }

@@ -8,51 +8,25 @@
 import SwiftUI
 
 /// A results screen where the player submits their final scavenger hunt progress.
-///
-/// This view shows:
-/// - how many photo symbols the player found
-/// - the reward or discount code earned from photo progress
-/// - the secret letters discovered from photographed symbols
-/// - a text field for entering the curator's name
-/// - the final game ending after submission
-///
-/// The ending is calculated by `GameState` using the player's progress and
-/// the curator name answer.
 struct EndingSubmissionView: View {
-    
-    /// The shared game state for the whole app.
-    ///
-    /// This provides photo progress, reward information, discovered letters,
-    /// and ending calculation logic.
+
     @EnvironmentObject private var gameState: GameState
     
     /// Allows this view to dismiss itself and return to the game.
     @Environment(\.dismiss) private var dismiss
     
-    
     // MARK: - State
     
-    /// The player's typed answer for the curator name puzzle.
-    ///
-    /// The correct answer is checked inside `GameState.ending(for:)`.
+    /// The player's typed answer for the curator puzzle.
     @State private var curatorAnswer = ""
-    
-    /// Tracks whether the player has pressed the submit button.
-    ///
-    /// The ending card only appears after this becomes `true`.
     @State private var hasSubmitted = false
-    
     
     // MARK: - Computed Properties
     
     /// The ending the player earns based on current progress and typed answer.
-    ///
-    /// This value updates automatically whenever `curatorAnswer` changes or
-    /// when relevant game progress changes in `GameState`.
     private var ending: GameEnding {
         gameState.ending(for: curatorAnswer)
     }
-    
     
     // MARK: - Body
     
@@ -61,10 +35,10 @@ struct EndingSubmissionView: View {
             ScrollView {
                 VStack(spacing: 22) {
                     
-                    // Shows photo symbol progress and the reward code.
+                    // Shows photo progress and the reward code.
                     progressCard
                     
-                    // Shows the curator name puzzle and answer field.
+                    // Shows the curator puzzle and answer field.
                     curatorCard
                     
                     // Shows the final ending only after the player submits.
@@ -95,7 +69,7 @@ struct EndingSubmissionView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Submit Results")
+            .navigationTitle("Summary")
         }
     }
     
@@ -103,28 +77,22 @@ struct EndingSubmissionView: View {
     // MARK: - Progress Card
     
     /// Shows the player's photo scavenger hunt progress.
-    ///
-    /// This card includes:
-    /// - the number of photographed symbols
-    /// - the total number of possible symbols
-    /// - the reward message
-    /// - the reward or discount code
     private var progressCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             
             Text("Photo Scavenger Hunt")
                 .font(.title2.bold())
             
-            Text("Historical symbols photographed:")
+            Text("Historical photos captured:")
                 .foregroundStyle(.secondary)
             
-            // Large visual count of collected symbols.
-            Text("\(gameState.photographedSymbolCount) / \(gameState.totalPhotoSymbolCount)")
+            // Large visual count of collected photos.
+            Text("\(gameState.photoCount) / \(gameState.totalPhotoCount)")
                 .font(.largeTitle.bold())
             
             Divider()
             
-            // Message based on how many photo symbols have been collected.
+            // Message based on how many photos have been taken.
             Text(gameState.photoRewardMessage)
                 .font(.headline)
             
@@ -134,7 +102,7 @@ struct EndingSubmissionView: View {
                 
                 Spacer()
                 
-                // Shows either a real reward code or "LOCKED".
+                // Shows either a reward code or "LOCKED".
                 //
                 // If the reward is still locked, the text is gray.
                 // If a reward code has been earned, the text turns green.
@@ -151,17 +119,14 @@ struct EndingSubmissionView: View {
     
     // MARK: - Curator Puzzle Card
     
-    /// Shows the curator name puzzle.
-    ///
-    /// Each photographed `PhotoSymbol` reveals one secret letter.
-    /// The player uses the discovered letters to guess the curator's name.
+    /// Shows the curator puzzle.
     private var curatorCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             
             Text("Grand Prize Clue")
                 .font(.title3.bold())
             
-            Text("Each photo contains one red-circled letter. Arrange the letters to reveal the curator’s name.")
+            Text("Each photo contains one red-circled letter. Arrange the letters to solve the curator’s puzzle: Who guards the Lost Lemon Mine?")
                 .foregroundStyle(.secondary)
             
             HStack {
@@ -178,18 +143,18 @@ struct EndingSubmissionView: View {
                     .foregroundStyle(.red)
             }
             
-            // Text field where the player enters the curator's name.
+            // Text field where the player enters the answer.
             //
             // Capitalization is set to characters to make puzzle entry easier,
             // and autocorrection is disabled so the system does not alter names.
-            TextField("Curator name", text: $curatorAnswer)
+            TextField("Puzzle Solution", text: $curatorAnswer)
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
                 .textFieldStyle(.roundedBorder)
             
-            // Extra grand prize instruction appears only after all symbols are found.
-            if gameState.photographedSymbolCount == 10 {
-                Text("Find all 10 symbols and enter the correct curator name to qualify for the $5000 grand prize draw.")
+            // Extra grand prize instruction appears only after all photos are found.
+            if gameState.photoCount == 9 {
+                Text("Find and unscramble all 9 letters and enter the correct curator's puzzle answer to qualify for the $5000 grand prize draw.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -203,11 +168,6 @@ struct EndingSubmissionView: View {
     // MARK: - Ending Card
     
     /// Shows the final ending after the player submits their results.
-    ///
-    /// The ending depends on:
-    /// - photo symbol progress
-    /// - evidence progress
-    /// - whether the curator name answer is correct
     private var endingCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             

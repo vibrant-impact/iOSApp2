@@ -7,134 +7,168 @@
 
 import SwiftUI
 
-/// The interactive investigation scene for the Hot Springs location.
-///
-/// This view displays the Hot Springs image scene with tappable hotspots placed
-/// over important clue areas.
-///
-/// The player can:
-/// - open the inventory bag
-/// - photograph the Hot Springs photo symbol
-/// - collect the mineral spring token evidence
-/// - complete the related Hot Springs lead when ready
-/// - return to the museum
 struct HotSpringsView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This is used to:
-    /// - open inventory information
-    /// - collect evidence
-    /// - complete the related story lead
-    /// - check photographed symbols
-    /// - record newly photographed symbols
-    /// - change the current location
     @EnvironmentObject private var gameState: GameState
     
     
     // MARK: - State
     
-    /// Controls whether the inventory sheet is currently shown.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether the mineral token alert is currently shown.
     @State private var showingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
-    /// The currently active photo symbol, if the camera view should open.
-    ///
-    /// Setting this value presents `FakeCameraView` using `.fullScreenCover`.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
+    @State private var activeZoomOverlay: HotSpringsZoomOverlay?
+    @State private var collectedItemOverlay: InventoryItem?
     
     
     // MARK: - Scene Data
     
-    /// The original design size of the Hot Springs image.
-    ///
-    /// Hotspot rectangles are defined using this coordinate system.
-    /// `ImageSceneView` scales the hotspots so they stay aligned with the image
-    /// on different device sizes.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// The tappable hotspot areas for the Hot Springs scene.
-    ///
-    /// Each hotspot contains:
-    /// - an `id`, used in `handleHotspotTapped(_:)`
-    /// - a display `name`, useful for debug overlays
-    /// - a `rect`, placed in the original `canvasSize` coordinate system
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 520, y: 1080, width: 220, height: 220)
+            id: "marilyn_monroe_picture",
+            name: "Marilyn Monroe Picture",
+            rect: CGRect(x: 839, y: 1416, width: 382, height: 538)
         ),
         SceneHotspot(
-            id: "story_item",
-            name: "Mineral Token",
-            rect: CGRect(x: 520, y: 1850, width: 220, height: 220)
+            id: "keys", // The actual key hotspot
+            name: "Keys on Board",
+            rect: CGRect(x: 1079, y: 2033, width: 186, height: 199)
+        ),
+        SceneHotspot(
+            id: "lodge",
+            name: "Hot Springs Lodge",
+            rect: CGRect(x: 664, y: 840, width: 626, height: 424)
+        ),
+        SceneHotspot(
+            id: "map_table",
+            name: "Table with Map",
+            rect: CGRect(x: 1010, y: 2302, width: 280, height: 233)
+        ),
+        SceneHotspot(
+            id: "shed",
+            name: "Shed",
+            rect: CGRect(x: 0, y: 1585, width: 211, height: 317)
+        ),
+        SceneHotspot(
+            id: "hot_pool",
+            name: "Hot Spring Pool",
+            rect: CGRect(x: 263, y: 1262, width: 583, height: 292)
         )
     ]
+    
+    
+    // MARK: - Active Scene Layers
+    
+    private var activeHotspots: [SceneHotspot] {
+        hotspots.filter { hotspot in
+            switch hotspot.id {
+            case "keys":
+                return gameState.hasTradedVintageBrassToken && !gameState.hasCollectedObservatoryLockerKey
+            case "map_table":
+                return !gameState.hasFoundCafeLead
+            default:
+                return true
+            }
+        }
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        var overlays: [SceneOverlayObject] = []
+        
+        // Overlay for when keys are taken
+        if gameState.hasCollectedObservatoryLockerKey {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "key_gone",
+                    imageName: "hot_springs_key_gone_overlay",
+                    rect: CGRect(x: 1119, y: 2062, width: 76, height: 157)
+                )
+            )
+        }
+        
+        if gameState.hasFoundCafeLead {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "cafe_lead_gone",
+                    imageName: "hot_springs_cafe_lead_gone_overlay",
+                    rect: CGRect(x: 970, y: 2356, width: 218, height: 162)
+                )
+            )
+        }
+        
+        return overlays
+    }
     
     
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            
-            // MARK: Scene Image and Hotspots
-            
-            // Displays the Hot Springs background artwork and overlays tappable
-            // hotspot rectangles.
             ImageSceneView(
-                imageName: "hot_springs",
+                imageName: "hot_springs_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
-                showDebugHotspots: true,
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
+                showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
+            SnowfallOverlay()
             
-            // MARK: Top HUD
-            
-            // Shows the location title, subtitle, and inventory bag button.
             TopHUDView(
-                locationTitle: "Hot Springs",
+                locationTitle: "Upper Hot Springs",
                 locationSubtitle: "Warm refuge in a frozen world",
-                onBagTapped: { showingInventory = true }
+                onBagTapped: {
+                    showingInventory = true
+                },
+                onJournalTapped: {
+                    showingJournal = true
+                }
             )
             
-            
-            // MARK: Return Button
-            
-            // Adds the bottom return-to-museum button.
             returnButton
+            
+            if let activeZoomOverlay {
+                zoomOverlay(for: activeZoomOverlay)
+            }
+            
+            if let collectedItemOverlay {
+                ItemCollectedOverlay(item: collectedItemOverlay) {
+                    self.collectedItemOverlay = nil
+                }
+            }
         }
-        
-        // MARK: Inventory Sheet
-        
-        // Presents the player's inventory bag as a medium-height sheet.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
         
-        // MARK: Mineral Token Alert
-        
-        // Shows after the player taps the mineral token hotspot.
-        .alert("Mineral Spring Token", isPresented: $showingAlert) {
-            Button("OK") { }
-        } message: {
-            Text("You record the mineral spring token. Its mark resembles the oilcloth fragment.")
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
+                .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
         }
         
-        // MARK: Camera View
-        
-        // Opens the fake camera when the player taps the photo symbol hotspot.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
+        .alert(alertTitle, isPresented: $showingAlert) {
+            Button("OK") { }
+        } message: {
+            Text(alertMessage)
+        }
+        .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { gameState.photographSymbol($0) }
+                photo: photo,
+                alreadyCaptured: gameState.hasPhoto(photo),
+                onCapture: { capturedPhoto in
+                    gameState.capturePhoto(capturedPhoto)
+                }
             )
         }
     }
@@ -142,16 +176,12 @@ struct HotSpringsView: View {
     
     // MARK: - Return Button
     
-    /// The bottom navigation button that returns the player to the museum.
     private var returnButton: some View {
         VStack {
             Spacer()
             
             Button {
-                
-                // Move the player back to the museum interior.
                 gameState.currentLocation = .museumInterior
-                
             } label: {
                 Label("Return to Museum", systemImage: "arrow.uturn.left")
                     .frame(maxWidth: .infinity)
@@ -164,32 +194,112 @@ struct HotSpringsView: View {
     
     // MARK: - Hotspot Handling
     
-    /// Handles taps on the Hot Springs scene hotspots.
-    ///
-    /// The hotspot's `id` determines what happens:
-    /// - `"photo_symbol"` opens the fake camera
-    /// - any other hotspot currently records the mineral spring token evidence
-    ///
-    /// - Parameter hotspot: The hotspot the player tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
-        
-        // The photo symbol opens the camera instead of collecting evidence.
-        if hotspot.id == "photo_symbol" {
-            activePhotoSymbol = .hotSprings
+        switch hotspot.id {
+        case "marilyn_monroe_picture":
+            activePhoto = Photo.hotSprings
             
-        } else {
+        case "keys":
+            activeZoomOverlay = .keysAvailable
             
-            // Record the mineral spring token as collected evidence.
-            gameState.collectEvidence(.mineralSpringToken)
+        case "map_table":
+            activeZoomOverlay = .mapTable
             
-            // If a story lead is connected to the Hot Springs location,
-            // ask the game state to complete it if its requirements are met.
-            if let lead = gameState.lead(for: .hotSprings) {
-                gameState.completeLeadIfNeeded(lead)
-            }
+        case "lodge":
+            showAlert(
+                title: "Hot Springs Lodge",
+                message: "The lodge is quiet, but the windows glow with mountain warmth."
+            )
             
-            // Show the player a short clue description.
-            showingAlert = true
+        case "shed":
+            showAlert(
+                title: "Small Shed",
+                message: "A small shed beside the hot springs—practical as ever, built for chores and sore hands."
+            )
+            
+        case "hot_pool":
+            showAlert(
+                title: "Hot Spring Pool",
+                message: "Steam rolls over the mineral water. Even in deep winter, the pool refuses to freeze."
+            )
+            
+        default:
+            break
         }
     }
+    
+    
+    // MARK: - Zoom Overlays
+    
+    @ViewBuilder
+    private func zoomOverlay(for overlay: HotSpringsZoomOverlay) -> some View {
+        switch overlay {
+        case .mapTable:
+            HotspotZoomOverlay(
+                title: "Map on the Table",
+                imageName: "zoom_hot_springs_cafe_lead",
+                description: """
+                A worn map and research notes lie on the table. The researcher could be helpful to chat with. 
+
+                Scribblings on a napkin point toward the 'Snowy Owl Cafe' in downtown Banff.
+                """,
+                primaryButtonTitle: "Take Cafe Lead",
+                onPrimaryAction: {
+                    if !gameState.hasFoundCafeLead {
+                        gameState.collectInventoryItem(.cafeLead)
+                    }
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .cafeLead
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .keysAvailable:
+            HotspotZoomOverlay(
+                title: "Keys on Board",
+                imageName: "zoom_hot_springs_keys",
+                description: "There it is, the green key that the researcher promised. It's onward to the Sulphur Mountain Observatory from here.",
+                primaryButtonTitle: "Take Observatory Key",
+                onPrimaryAction: {
+                    gameState.collectInventoryItem(.observatoryLockerKey)
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .observatoryLockerKey
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+        }
+    }
+    
+    
+    // MARK: - Alerts
+    
+    private func showAlert(title: String, message: String) {
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
+    }
+}
+
+
+// MARK: - Zoom Overlay Types
+
+private enum HotSpringsZoomOverlay: Identifiable {
+    case mapTable
+    case keysAvailable
+    
+    var id: String {
+        String(describing: self)
+    }
+}
+
+
+// MARK: - Preview
+
+#Preview {
+    HotSpringsView()
+        .environmentObject(GameState())
 }

@@ -7,192 +7,225 @@
 
 import SwiftUI
 
-/// The final hidden lair scene for the Bigfoot storyline.
-///
-/// This view displays the Bigfoot lair image scene with interactive hotspots.
-/// It is likely used near the end of the investigation, after the player has
-/// followed enough evidence to discover where Bigfoot is hiding.
-///
-/// The player can:
-/// - open the inventory bag
-/// - photograph the final Bigfoot photo symbol
-/// - submit their final investigation results
-/// - return to Lake Minnewanka
+import SwiftUI
+
 struct BigfootLairView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This is used to:
-    /// - open and display inventory information
-    /// - check whether a photo symbol has already been captured
-    /// - record newly photographed symbols
-    /// - move the player back to Lake Minnewanka
     @EnvironmentObject private var gameState: GameState
     
-    
-    // MARK: - State
-    
-    /// Controls whether the inventory sheet is currently shown.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether the ending submission sheet is currently shown.
-    ///
-    /// This sheet lets the player submit their final evidence/results.
-    @State private var showingSubmission = false
+    @State private var activeOverlay: BigfootLairOverlay?
+    @State private var showingBigfootCamera = false
+    @State private var showingFinalBlackout = false
     
-    /// The currently active photo symbol, if the camera should be opened.
-    ///
-    /// Setting this value presents `FakeCameraView` through `.fullScreenCover`.
-    /// Setting it back to `nil` dismisses the camera.
-    @State private var activePhotoSymbol: PhotoSymbol?
-    
-    
-    // MARK: - Scene Data
-    
-    /// The original design size of the Bigfoot lair image.
-    ///
-    /// Hotspot rectangles are defined in this coordinate system.
-    /// `ImageSceneView` uses this size to scale hotspots correctly on different
-    /// device screens.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// The tappable hotspot areas for the Bigfoot lair scene.
-    ///
-    /// Each hotspot has:
-    /// - an `id`, used by `handleHotspotTapped(_:)`
-    /// - a display `name`, useful for debug labels
-    /// - a `rect`, positioned in the original `canvasSize` coordinate system
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Bigfoot Photo Symbol",
-            rect: CGRect(x: 520, y: 1120, width: 260, height: 300)
+            id: "cave_exit",
+            name: "Cave Entrance Above",
+            rect: CGRect(x: 338, y: 222, width: 759, height: 661)
         ),
         SceneHotspot(
-            id: "submit",
-            name: "Submit Results",
-            rect: CGRect(x: 850, y: 1980, width: 300, height: 260)
+            id: "bigfoot_family",
+            name: "Bigfoot Family",
+            rect: CGRect(x: 145, y: 1725, width: 662, height: 721)
+        ),
+        SceneHotspot(
+            id: "lost_lemon_mine",
+            name: "Lost Lemon Mine",
+            rect: CGRect(x: 13, y: 981, width: 515, height: 665)
+        ),
+        SceneHotspot(
+            id: "bigfoot",
+            name: "Bigfoot",
+            rect: CGRect(x: 787, y: 1292, width: 374, height: 666)
         )
     ]
     
-    
-    // MARK: - Body
-    
     var body: some View {
         ZStack {
-            
-            // MARK: Scene Image and Hotspots
-            
-            // Displays the Bigfoot lair background image and overlays the
-            // interactive hotspot rectangles.
             ImageSceneView(
-                imageName: "bigfoot_lair",
+                imageName: "bigfoot_lair_base",
                 canvasSize: canvasSize,
                 hotspots: hotspots,
-                showDebugHotspots: true,
+                overlayObjects: [],
+                showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
+            lairTitle
             
-            // MARK: Top HUD
-            
-            // Shows the current location name, scene subtitle, and bag button.
-            TopHUDView(
-                locationTitle: "The Hidden Lair",
-                locationSubtitle: "The legend was protecting something",
-                onBagTapped: { showingInventory = true }
-            )
-            
-            
-            // MARK: Return Button
-            
-            // Adds the bottom button that returns the player to Lake Minnewanka.
-            returnButton
-        }
-        
-        // MARK: Inventory Sheet
-        
-        // Presents the player's inventory bag as a medium-height sheet.
-        .sheet(isPresented: $showingInventory) {
-            InventoryView()
-                .environmentObject(gameState)
-                .presentationDetents([.medium])
-        }
-        
-        // MARK: Ending Submission Sheet
-        
-        // Presents the final evidence/result submission screen.
-        .sheet(isPresented: $showingSubmission) {
-            EndingSubmissionView()
-                .environmentObject(gameState)
-        }
-        
-        // MARK: Camera View
-        
-        // Opens the fake camera when the player taps the Bigfoot photo symbol.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
-            FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { gameState.photographSymbol($0) }
-            )
-        }
-    }
-    
-    
-    // MARK: - Return Button
-    
-    /// The bottom navigation button that returns the player to Lake Minnewanka.
-    ///
-    /// Lake Minnewanka is likely the location that leads into the hidden lair,
-    /// so this button acts as the scene's back navigation.
-    private var returnButton: some View {
-        VStack {
-            Spacer()
-            
-            Button {
-                
-                // Move the player back to Lake Minnewanka.
-                gameState.currentLocation = .lakeMinnewanka
-                
-            } label: {
-                Label("Return to Lake Minnewanka", systemImage: "arrow.uturn.left")
-                    .frame(maxWidth: .infinity)
+            if let activeOverlay {
+                overlayView(for: activeOverlay)
             }
-            .buttonStyle(.borderedProminent)
-            .padding()
+            
+            if showingFinalBlackout {
+                BigfootLairBlackoutView {
+                    gameState.finishBigfootLairSequence()
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showingBigfootCamera) {
+            BigfootEvidenceCameraView {
+                gameState.hasTakenBigfootEvidencePhoto = true
+                checkForLairCompletion()
+            }
         }
     }
     
+    private var lairTitle: some View {
+        VStack {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Unknown Cave")
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+                    
+                    Text("You are hurt, disoriented, and unsure of your location.")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.75))
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.7),
+                        Color.black.opacity(0.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            
+            Spacer()
+        }
+    }
     
-    // MARK: - Hotspot Handling
-    
-    /// Handles taps on the Bigfoot lair scene hotspots.
-    ///
-    /// The hotspot's `id` determines what happens:
-    /// - `"photo_symbol"` opens the fake camera
-    /// - `"submit"` opens the ending submission screen
-    ///
-    /// - Parameter hotspot: The hotspot the player tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
+        case "cave_exit":
+            gameState.hasInspectedLairExit = true
+            activeOverlay = .caveExit
             
-        case "photo_symbol":
-            // Opens the camera for the final Bigfoot lair photo symbol.
-            activePhotoSymbol = .bigfootLair
+        case "bigfoot_family":
+            gameState.hasMetBigfootFamily = true
+            activeOverlay = .bigfootFamily
             
-        case "submit":
-            // Opens the ending submission screen where the player can submit
-            // their final investigation findings.
-            showingSubmission = true
+        case "lost_lemon_mine":
+            gameState.hasInspectedLostLemonMine = true
+            activeOverlay = .lostLemonMine
+            
+        case "bigfoot":
+            showingBigfootCamera = true
             
         default:
-            // Ignore unknown hotspot IDs.
             break
+        }
+    }
+    
+    private func checkForLairCompletion() {
+        guard gameState.hasCompletedRequiredLairInteractions else {
+            return
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            showingFinalBlackout = true
+        }
+    }
+    
+    @ViewBuilder
+    private func overlayView(for overlay: BigfootLairOverlay) -> some View {
+        switch overlay {
+        case .caveExit:
+            HotspotZoomOverlay(
+                title: "The Way Out",
+                imageName: "zoom_lair_cave_exit",
+                description: """
+                Far above you, cold daylight spills through a jagged opening in the rock.
+
+                You have no idea where you are.
+
+                Your head aches. Your shoulder burns. Even if you could reach the wall, you are in no condition to climb out.
+                """,
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                },
+                onClose: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                }
+            )
+            
+        case .bigfootFamily:
+            HotspotZoomOverlay(
+                title: "Gentle Hands",
+                imageName: "zoom_lair_bigfoot_family",
+                description: """
+                A smaller Bigfoot seems eager to help while another carefully arranges old first aid supplies.
+
+                Bandages. A dented tin. Meltwater in a cup.
+
+                They did not bring you here as a prisoner.
+
+                They brought you here because you were hurt.
+                """,
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                },
+                onClose: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                }
+            )
+            
+        case .lostLemonMine:
+            HotspotZoomOverlay(
+                title: "The Lost Lemon Mine",
+                imageName: "zoom_lair_lost_lemon_mine",
+                description: """
+                Beyond the cavern wall, a narrow mine opening disappears into darkness.
+
+                Weathered boards. Rusted tools. A faded mark burned into an old support beam:
+
+                LEMON.
+
+                The legend was real.
+
+                But this place is not yours to disturb.
+                """,
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                },
+                onClose: {
+                    activeOverlay = nil
+                    checkForLairCompletion()
+                }
+            )
         }
     }
 }
 
+private enum BigfootLairOverlay: Identifiable {
+    case caveExit
+    case bigfootFamily
+    case lostLemonMine
+    
+    var id: String {
+        String(describing: self)
+    }
+}
 
 // MARK: - Preview
 

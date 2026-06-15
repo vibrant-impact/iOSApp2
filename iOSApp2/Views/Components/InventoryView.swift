@@ -7,51 +7,50 @@
 
 import SwiftUI
 
-/// Displays the player's inventory bag.
-///
-/// This view shows any tools, objects, or important items the player has
-/// collected during the game.
-///
-/// If the inventory is empty, the view shows an empty-state message.
-/// If the player has collected items, each item appears in a list with its
-/// name and description.
 struct InventoryView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This provides access to the player's current inventory.
     @EnvironmentObject private var gameState: GameState
-    
+    @Environment(\.dismiss) private var dismiss
     
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
-            List {
+            HStack {
+            
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(.white.opacity(0.9))
+                }
+                .padding()
                 
-                // If the player has not collected any items yet,
-                // show a helpful empty-state message instead of a blank list.
+    
+                Text("Bag")
+                    .font(.title.bold())
+                    .foregroundStyle(.white)
+           
+                Spacer()
+            }
+            .padding()
+            
+            List {
                 if gameState.inventory.isEmpty {
                     emptyInventoryView
                 } else {
                     inventoryRows
                 }
             }
-            .navigationTitle("Bag")
         }
     }
     
     
-    // MARK: - Empty Inventory View
+    // MARK: - Empty State
     
-    /// The message shown when the player's bag is empty.
-    ///
-    /// This helps the player understand that tools and collected items will
-    /// appear here later.
     private var emptyInventoryView: some View {
         VStack(spacing: 12) {
-            
-            // Backpack icon representing the player's bag.
             Image(systemName: "backpack")
                 .font(.system(size: 42))
                 .foregroundStyle(.secondary)
@@ -59,7 +58,7 @@ struct InventoryView: View {
             Text("Your Bag is Empty")
                 .font(.headline)
             
-            Text("Collected tools and evidence will appear here.")
+            Text("Collected tools and useful items will appear here until they are used.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -69,25 +68,28 @@ struct InventoryView: View {
     }
     
     
-    // MARK: - Inventory Rows
+    // MARK: - Rows
     
-    /// Displays one row for each item in the player's inventory.
-    ///
-    /// Each item row includes:
-    /// - the item name
-    /// - the item description
     private var inventoryRows: some View {
         ForEach(gameState.inventory) { item in
-            VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(item.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 46, height: 46)
+                    .padding(5)
+                    .background(.orange.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10)
+                )
                 
-                // Main item title.
-                Text(item.name)
-                    .font(.headline)
-                
-                // Short explanation of what the item is or why it matters.
-                Text(item.description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(item.displayName)
+                        .font(.headline)
+                    
+                    Text(item.description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding(.vertical, 6)
         }

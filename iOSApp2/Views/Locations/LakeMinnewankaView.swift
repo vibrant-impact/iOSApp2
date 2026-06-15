@@ -7,138 +7,150 @@
 
 import SwiftUI
 
-/// The interactive investigation scene for Lake Minnewanka.
-///
-/// This view displays the Lake Minnewanka image scene with tappable hotspots.
-/// It appears to be one of the late-game locations where the final clues gather.
-///
-/// The player can:
-/// - open the inventory bag
-/// - photograph the Lake Minnewanka photo symbol
-/// - discover the hidden path to Bigfoot's lair
-/// - submit final investigation results
-/// - return to the museum
 struct LakeMinnewankaView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This is used to:
-    /// - check photographed symbols
-    /// - record newly photographed symbols
-    /// - move between locations
-    /// - show inventory information
     @EnvironmentObject private var gameState: GameState
     
     
     // MARK: - State
     
-    /// Controls whether the inventory sheet is currently shown.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether the ending submission sheet is currently shown.
-    ///
-    /// This allows the player to submit their final evidence/results.
-    @State private var showingSubmission = false
+    @State private var showingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
-    /// The currently active photo symbol, if the camera view should open.
-    ///
-    /// Setting this value presents `FakeCameraView` using `.fullScreenCover`.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
+    @State private var activeZoomOverlay: LakeMinnewankaZoomOverlay?
+    @State private var collectedItemOverlay: InventoryItem?
     
     
     // MARK: - Scene Data
     
-    /// The original design size of the Lake Minnewanka image.
-    ///
-    /// Hotspot rectangles are defined using this coordinate system.
-    /// `ImageSceneView` scales the hotspots so they stay aligned with the image
-    /// on different device sizes.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// The tappable hotspot areas for the Lake Minnewanka scene.
-    ///
-    /// Each hotspot contains:
-    /// - an `id`, used by `handleHotspotTapped(_:)`
-    /// - a display `name`, useful for debug overlays
-    /// - a `rect`, placed in the original `canvasSize` coordinate system
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 520, y: 1080, width: 220, height: 220)
+            id: "crate",
+            name: "Frozen Crate",
+            rect: CGRect(x: 782, y: 2281, width: 198, height: 148)
         ),
         SceneHotspot(
-            id: "bigfoot_path",
-            name: "Hidden Path",
-            rect: CGRect(x: 860, y: 1880, width: 280, height: 360)
+            id: "underwater_town",
+            name: "Underwater Ghost Town",
+            rect: CGRect(x: 125, y: 1413, width: 686, height: 375)
         ),
         SceneHotspot(
-            id: "submit",
-            name: "Submit",
-            rect: CGRect(x: 120, y: 1980, width: 300, height: 260)
+            id: "cabin",
+            name: "Cabin",
+            rect: CGRect(x: 933, y: 1042, width: 351, height: 267)
+        ),
+        SceneHotspot(
+            id: "animals",
+            name: "Animals by Campfire",
+            rect: CGRect(x: 408, y: 2227, width: 305, height: 343)
+        ),
+        SceneHotspot(
+            id: "rowboat_dock",
+            name: "Rowboat and Dock",
+            rect: CGRect(x: 688, y: 1922, width: 418, height: 239)
         )
     ]
+    
+    
+    // MARK: - Active Scene Layers
+    
+    private var activeHotspots: [SceneHotspot] {
+        hotspots.filter { hotspot in
+            switch hotspot.id {
+            case "crate":
+                return !gameState.hasCollectedWoodcuttersAxe
+            default:
+                return true
+            }
+        }
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        var overlays: [SceneOverlayObject] = []
+        
+        if gameState.hasOpenedMinnewankaCrate {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "crate_open",
+                    imageName: "lake_minnewanka_crate_open_overlay",
+                    rect: CGRect(x: 756, y: 2259, width: 249, height: 180)
+                )
+            )
+        }
+        
+        return overlays
+    }
     
     
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            
-            // MARK: Scene Image and Hotspots
-            
-            // Displays the Lake Minnewanka background artwork and overlays the
-            // tappable hotspot rectangles.
             ImageSceneView(
-                imageName: "lake_minnewanka",
+                imageName: "lake_minnewanka_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
-                showDebugHotspots: true,
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
+                showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
+            SnowfallOverlay()
             
-            // MARK: Top HUD
-            
-            // Shows the current location title, subtitle, and bag button.
             TopHUDView(
                 locationTitle: "Lake Minnewanka",
-                locationSubtitle: "Where the last clues gather",
-                onBagTapped: { showingInventory = true }
+                locationSubtitle: "A drowned town beneath the ice",
+                onBagTapped: {
+                    showingInventory = true
+                },
+                onJournalTapped: {
+                    showingJournal = true
+                }
             )
             
-            
-            // MARK: Return Button
-            
-            // Adds the bottom button that returns the player to the museum.
             returnButton
+            
+            if let activeZoomOverlay {
+                zoomOverlay(for: activeZoomOverlay)
+            }
+            
+            if let collectedItemOverlay {
+                ItemCollectedOverlay(item: collectedItemOverlay) {
+                    self.collectedItemOverlay = nil
+                }
+            }
         }
-        
-        // MARK: Inventory Sheet
-        
-        // Presents the player's inventory bag as a medium-height sheet.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
         
-        // MARK: Ending Submission Sheet
-        
-        // Presents the final evidence/result submission screen.
-        .sheet(isPresented: $showingSubmission) {
-            EndingSubmissionView()
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
                 .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
         }
         
-        // MARK: Camera View
-        
-        // Opens the fake camera when the player taps the photo symbol hotspot.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
+        .alert(alertTitle, isPresented: $showingAlert) {
+            Button("OK") { }
+        } message: {
+            Text(alertMessage)
+        }
+        .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { gameState.photographSymbol($0) }
+                photo: photo,
+                alreadyCaptured: gameState.hasPhoto(photo),
+                onCapture: { capturedPhoto in
+                    gameState.capturePhoto(capturedPhoto)
+                }
             )
         }
     }
@@ -146,16 +158,12 @@ struct LakeMinnewankaView: View {
     
     // MARK: - Return Button
     
-    /// The bottom navigation button that returns the player to the museum.
     private var returnButton: some View {
         VStack {
             Spacer()
             
             Button {
-                
-                // Move the player back to the museum interior.
                 gameState.currentLocation = .museumInterior
-                
             } label: {
                 Label("Return to Museum", systemImage: "arrow.uturn.left")
                     .frame(maxWidth: .infinity)
@@ -168,33 +176,98 @@ struct LakeMinnewankaView: View {
     
     // MARK: - Hotspot Handling
     
-    /// Handles taps on the Lake Minnewanka scene hotspots.
-    ///
-    /// The hotspot's `id` determines what happens:
-    /// - `"photo_symbol"` opens the fake camera
-    /// - `"bigfoot_path"` moves the player to Bigfoot's hidden lair
-    /// - `"submit"` opens the ending submission screen
-    ///
-    /// - Parameter hotspot: The hotspot the player tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
+        case "crate":
+            activeZoomOverlay = gameState.hasInventoryItem(.rustyCrowbar)
+                ? .crateWithCrowbar
+                : .crateNeedsCrowbar
             
-        case "photo_symbol":
-            // Opens the camera for the Lake Minnewanka photo symbol.
-            activePhotoSymbol = .lakeMinnewanka
+        case "underwater_town":
+            activePhoto = Photo.lakeMinnewanka
             
-        case "bigfoot_path":
-            // Move the player into the hidden Bigfoot lair scene.
-            gameState.currentLocation = .bigfootLair
+        case "cabin":
+            showAlert(
+                title: "Cabin",
+                message: "The cabin looks warm from a distance, which is exactly how cabins trick people in winter."
+            )
             
-        case "submit":
-            // Open the final submission sheet.
-            showingSubmission = true
+        case "animals":
+            showAlert(
+                title: "Animals by the Fire",
+                message: "The animals seem unusually comfortable together. Either this is a peaceful forest, or someone promised snacks."
+            )
+            
+        case "rowboat_dock":
+            showAlert(
+                title: "Rowboat and Dock",
+                message: "The rowboat is frozen in place. Whatever lies under Lake Minnewanka will have to stay underwater a little longer."
+            )
             
         default:
-            // Ignore unknown hotspot IDs.
             break
         }
+    }
+    
+    
+    // MARK: - Zoom Overlays
+    
+    @ViewBuilder
+    private func zoomOverlay(for overlay: LakeMinnewankaZoomOverlay) -> some View {
+        switch overlay {
+        case .crateNeedsCrowbar:
+            HotspotZoomOverlay(
+                title: "Frozen Crate",
+                imageName: "zoom_lake_minnewanka_crate",
+                description: "The crate is frozen shut. The lid will not budge by hand.",
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeZoomOverlay = nil
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .crateWithCrowbar:
+            HotspotZoomOverlay(
+                title: "Frozen Crate",
+                imageName: "zoom_lake_minnewanka_crate",
+                description: "The rusty crowbar bites into the frozen seam. With one hard pull, the crate cracks open. Inside is a woodcutter's axe.",
+                primaryButtonTitle: "Take Axe",
+                onPrimaryAction: {
+                    gameState.hasOpenedMinnewankaCrate = true
+                    gameState.useInventoryItem(.rustyCrowbar)
+                    gameState.collectInventoryItem(.woodcuttersAxe)
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .woodcuttersAxe
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+        }
+    }
+    
+    
+    // MARK: - Alerts
+    
+    private func showAlert(title: String, message: String) {
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
+    }
+}
+
+
+// MARK: - Zoom Overlay Types
+
+private enum LakeMinnewankaZoomOverlay: Identifiable {
+    case crateNeedsCrowbar
+    case crateWithCrowbar
+    
+    var id: String {
+        String(describing: self)
     }
 }
 

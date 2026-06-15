@@ -7,33 +7,11 @@
 
 import SwiftUI
 
-/// A single vertical number dial used in a combination lock puzzle.
-///
-/// `LockDial` displays:
-/// - an up chevron button
-/// - the current digit value
-/// - a down chevron button
-///
-/// The parent view owns the actual value and passes in closures to increment
-/// or decrement it. This keeps `LockDial` reusable and focused only on display
-/// and user interaction.
 struct LockDial: View {
     
-    /// The digit currently shown in the dial.
-    ///
-    /// Usually this is a number from `0` through `9`.
     let value: Int
-    
-    /// Runs when the player taps the up chevron.
-    ///
-    /// The parent view should update the dial value.
     let onIncrement: () -> Void
-    
-    /// Runs when the player taps the down chevron.
-    ///
-    /// The parent view should update the dial value.
     let onDecrement: () -> Void
-    
     
     // MARK: - Body
     
@@ -49,7 +27,6 @@ struct LockDial: View {
                 Image(systemName: "chevron.up")
                     .font(.headline.bold())
             }
-            
             
             // MARK: Current Value Display
             

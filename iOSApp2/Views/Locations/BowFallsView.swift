@@ -7,101 +7,92 @@
 
 import SwiftUI
 
-/// The interactive investigation scene for Bow Falls.
-///
-/// This view displays the Bow Falls image scene with tappable hotspots placed
-/// over important clue areas.
-///
-/// The player can:
-/// - open the inventory bag
-/// - photograph the Bow Falls photo symbol
-/// - collect a long-handled net
-/// - use the small shovel to uncover a buried survey marker
-/// - inspect the falls
-/// - return to the museum
-///
-/// This location is connected to the `.bowFalls` story lead.
 struct BowFallsView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This is used to:
-    /// - collect evidence
-    /// - add inventory items
-    /// - check whether the player has required tools
-    /// - complete the related story lead
-    /// - check photographed symbols
-    /// - change the current location
     @EnvironmentObject private var gameState: GameState
     
     
     // MARK: - State
     
-    /// Controls whether the inventory sheet is currently shown.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether the clue alert is currently shown.
     @State private var showingAlert = false
-    
-    /// The title displayed in the current alert.
     @State private var alertTitle = ""
-    
-    /// The message displayed in the current alert.
     @State private var alertMessage = ""
     
-    /// The currently active photo symbol, if the camera view should open.
-    ///
-    /// Setting this value presents `FakeCameraView` using `.fullScreenCover`.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
+    @State private var activeZoomOverlay: BowFallsZoomOverlay?
+    @State private var collectedItemOverlay: InventoryItem?
     
     
     // MARK: - Scene Data
     
-    /// The original design size of the Bow Falls image.
-    ///
-    /// Hotspot rectangles are defined using this coordinate system.
-    /// `ImageSceneView` scales the hotspots so they line up with the image on
-    /// different device sizes.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// The tappable hotspot areas for the Bow Falls scene.
-    ///
-    /// Each hotspot contains:
-    /// - an `id`, used in `handleHotspotTapped(_:)`
-    /// - a display `name`, useful for debug overlays
-    /// - a `rect`, placed in the original `canvasSize` coordinate system
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 560, y: 980, width: 220, height: 220)
+            id: "buried_canister",
+            name: "Buried Canister",
+            rect: CGRect(x: 185, y: 1862, width: 303, height: 253)
         ),
         SceneHotspot(
-            id: "net",
-            name: "Long Net",
-            rect: CGRect(x: 930, y: 1660, width: 250, height: 320)
+            id: "gaff_hook",
+            name: "Gaff Hook",
+            rect: CGRect(x: 935, y: 1698, width: 154, height: 462)
         ),
         SceneHotspot(
-            id: "snow_marker",
-            name: "Snow Marker",
-            rect: CGRect(x: 190, y: 2050, width: 360, height: 280)
+            id: "douglas_fir_trees",
+            name: "Douglas Fir Trees",
+            rect: CGRect(x: 844, y: 0, width: 446, height: 1439)
         ),
         SceneHotspot(
-            id: "falls",
-            name: "Falls",
-            rect: CGRect(x: 350, y: 700, width: 600, height: 650)
+            id: "frozen_falls",
+            name: "Frozen Falls",
+            rect: CGRect(x: 243, y: 830, width: 482, height: 634)
         )
     ]
     
     
-    // MARK: - Computed Properties
+    // MARK: - Active Scene Layers
     
-    /// The story lead connected to Bow Falls.
-    ///
-    /// If this lead exists, the view can ask `GameState` to complete it when
-    /// the required evidence has been collected.
-    private var lead: StoryLead? {
-        gameState.lead(for: .bowFalls)
+    private var activeHotspots: [SceneHotspot] {
+        hotspots.filter { hotspot in
+            switch hotspot.id {
+            case "gaff_hook":
+                return !gameState.hasCollectedGaffHook
+            case "buried_canister":
+                return !gameState.hasCollectedWoodenMatches
+            default:
+                return true
+            }
+        }
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        var overlays: [SceneOverlayObject] = []
+        
+        if gameState.hasCollectedWoodenMatches {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "canister_gone",
+                    imageName: "falls_canister_gone_overlay",
+                    rect: CGRect(x: 237, y: 1894, width: 201, height: 175)
+                )
+            )
+        }
+        
+        if gameState.hasCollectedGaffHook {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "hook_gone",
+                    imageName: "falls_gaff_hook_gone_overlay",
+                    rect: CGRect(x: 769, y: 1665, width: 372, height: 635)
+                )
+            )
+        }
+        
+        return overlays
     }
     
     
@@ -109,79 +100,77 @@ struct BowFallsView: View {
     
     var body: some View {
         ZStack {
-            
-            // MARK: Scene Image and Hotspots
-            
-            // Displays the Bow Falls background artwork and overlays tappable
-            // hotspot rectangles.
             ImageSceneView(
-                imageName: "bow_falls",
+                imageName: "bow_falls_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
-                showDebugHotspots: true,
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
+                showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
+            SnowfallOverlay()
             
-            // MARK: Top HUD
-            
-            // Shows the location title, subtitle, and inventory bag button.
             TopHUDView(
                 locationTitle: "Bow Falls",
                 locationSubtitle: "Winter thunder beneath the ice",
-                onBagTapped: { showingInventory = true }
+                onBagTapped: {
+                    showingInventory = true
+                },
+                onJournalTapped: {
+                    showingJournal = true
+                }
             )
             
+            returnButton
             
-            // MARK: Bottom Navigation
+            if let activeZoomOverlay {
+                zoomOverlay(for: activeZoomOverlay)
+            }
             
-            // Adds the return-to-museum button at the bottom of the screen.
-            bottomButton
+            if let collectedItemOverlay {
+                ItemCollectedOverlay(item: collectedItemOverlay) {
+                    self.collectedItemOverlay = nil
+                }
+            }
         }
-        
-        // MARK: Inventory Sheet
-        
-        // Presents the player's inventory bag as a medium-height sheet.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
         
-        // MARK: Clue Alert
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
+                .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
+        }
         
-        // Shows clue descriptions after the player taps certain hotspots.
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK") { }
         } message: {
             Text(alertMessage)
         }
-        
-        // MARK: Camera View
-        
-        // Opens the fake camera when the player taps the photo symbol hotspot.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
+        .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { gameState.photographSymbol($0) }
+                photo: photo,
+                alreadyCaptured: gameState.hasPhoto(photo),
+                onCapture: { capturedPhoto in
+                    gameState.capturePhoto(capturedPhoto)
+                }
             )
         }
     }
     
     
-    // MARK: - Bottom Button
+    // MARK: - Return Button
     
-    /// The button that returns the player to the museum interior.
-    private var bottomButton: some View {
+    private var returnButton: some View {
         VStack {
             Spacer()
             
             Button {
-                
-                // Move the player back to the museum.
                 gameState.currentLocation = .museumInterior
-                
             } label: {
                 Label("Return to Museum", systemImage: "arrow.uturn.left")
                     .frame(maxWidth: .infinity)
@@ -194,120 +183,106 @@ struct BowFallsView: View {
     
     // MARK: - Hotspot Handling
     
-    /// Handles taps on the Bow Falls scene hotspots.
-    ///
-    /// The hotspot's `id` determines which interaction should happen.
-    ///
-    /// - Parameter hotspot: The hotspot the player tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
+        case "gaff_hook":
+            activeZoomOverlay = .gaffHook
             
-        case "photo_symbol":
-            // Opens the fake camera for the Bow Falls photo symbol.
-            activePhotoSymbol = .bowFalls
+        case "buried_canister":
+            activeZoomOverlay = gameState.hasInventoryItem(.smallShovel)
+                ? .buriedCanisterWithShovel
+                : .buriedCanisterNeedsShovel
             
-        case "net":
-            // Handles collecting the long-handled net and its evidence photo.
-            handleNetTapped()
+        case "douglas_fir_trees":
+            activePhoto = Photo.bowFalls
             
-        case "snow_marker":
-            // Handles the buried survey marker interaction.
-            // This requires the small shovel.
-            handleSnowMarkerTapped()
-            
-        case "falls":
-            // Atmospheric story detail for inspecting the frozen falls.
+        case "frozen_falls":
             showAlert(
-                title: "Bow Falls",
-                message: "The frozen roar of the falls echoes through the valley. For a moment, it sounds almost like something answering from the trees."
+                title: "Frozen Falls",
+                message: "The frozen falls hang in mid-roar—Banff’s spray trapped in glassy time. Still, beautiful, and silent."
             )
             
         default:
-            // Ignore unknown hotspot IDs.
             break
         }
     }
     
     
-    // MARK: - Net Interaction
+    // MARK: - Zoom Overlays
     
-    /// Handles the long-handled net hotspot.
-    ///
-    /// This interaction:
-    /// - collects the Parks net tag evidence
-    /// - adds the long-handled net to the player's inventory
-    /// - checks whether the Bow Falls lead can now be completed
-    /// - shows an explanatory alert
-    private func handleNetTapped() {
-        
-        // Record evidence that the player photographed the Parks tag.
-        gameState.collectEvidence(.parksNetTagPhoto)
-        
-        // Add the long-handled net as a usable inventory item.
-        gameState.addInventoryItem(.longHandledNet)
-        
-        // Attempt to complete the connected Bow Falls lead.
-        completeLeadIfNeeded()
-        
-        showAlert(
-            title: "Long-Handled Net Found",
-            message: "You photograph the worn Parks tag and collect the long-handled net. This could retrieve something from deep water."
-        )
-    }
-    
-    
-    // MARK: - Snow Marker Interaction
-    
-    /// Handles the buried snow marker hotspot.
-    ///
-    /// The player must have the small shovel before they can clear the snow.
-    /// If they do not have it, the view shows a hint alert instead.
-    private func handleSnowMarkerTapped() {
-        
-        // Require the small shovel before the player can dig up the marker.
-        guard gameState.hasInventoryItem(InventoryItem.smallShovel.id) else {
-            showAlert(
-                title: "Hard-Packed Snow",
-                message: "Something is buried under the crusted snow, but you need a tool to clear it."
+    @ViewBuilder
+    private func zoomOverlay(for overlay: BowFallsZoomOverlay) -> some View {
+        switch overlay {
+        case .gaffHook:
+            HotspotZoomOverlay(
+                title: "Gaff Hook",
+                imageName: "zoom_falls_gaff_hook",
+                description: "A long gaff hook rests against the icy boulder. The metal hook is scratched but sturdy.",
+                primaryButtonTitle: "Take Gaff Hook",
+                onPrimaryAction: {
+                    gameState.collectInventoryItem(.gaffHook)
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .gaffHook
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
             )
-            return
+            
+        case .buriedCanisterNeedsShovel:
+            HotspotZoomOverlay(
+                title: "Packed Snowdrift",
+                imageName: "zoom_falls_canister",
+                description: "Something is buried beneath the crusted snow, but the drift is too hard to clear by hand.",
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeZoomOverlay = nil
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .buriedCanisterWithShovel:
+            HotspotZoomOverlay(
+                title: "Buried Canister",
+                imageName: "zoom_falls_canister",
+                description: "The small shovel cuts through the packed snow. Beneath the drift, you uncover a sealed canister filled with dry wooden matches.",
+                primaryButtonTitle: "Take Wooden Matches",
+                onPrimaryAction: {
+                    gameState.hasOpenedFallsCanister = true
+                    gameState.useInventoryItem(.smallShovel)
+                    gameState.collectInventoryItem(.woodenMatches)
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .woodenMatches
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
         }
-        
-        // The player has the shovel, so the buried survey marker can be found.
-        gameState.collectEvidence(.oldSurveyMarker)
-        
-        // Attempt to complete the connected Bow Falls lead.
-        completeLeadIfNeeded()
-        
-        showAlert(
-            title: "Old Survey Marker",
-            message: "You use the small shovel to clear the snow and uncover an old survey marker near the riverbank."
-        )
-    }
-    
-    
-    // MARK: - Lead Completion
-    
-    /// Completes the Bow Falls lead if the game state says it is ready.
-    ///
-    /// This safely exits if no matching lead exists.
-    private func completeLeadIfNeeded() {
-        guard let lead else { return }
-        gameState.completeLeadIfNeeded(lead)
     }
     
     
     // MARK: - Alerts
     
-    /// Shows a simple alert with a title and message.
-    ///
-    /// - Parameters:
-    ///   - title: The alert title.
-    ///   - message: The alert body text.
     private func showAlert(title: String, message: String) {
         alertTitle = title
         alertMessage = message
         showingAlert = true
+    }
+}
+
+
+// MARK: - Zoom Overlay Types
+
+private enum BowFallsZoomOverlay: Identifiable {
+    case gaffHook
+    case buriedCanisterNeedsShovel
+    case buriedCanisterWithShovel
+    
+    var id: String {
+        String(describing: self)
     }
 }
 

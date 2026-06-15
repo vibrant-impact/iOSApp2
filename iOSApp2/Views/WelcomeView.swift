@@ -8,12 +8,6 @@
 import SwiftUI
 
 /// WelcomeView is the first screen the player sees.
-///
-/// It introduces:
-/// - the Banff museum mystery
-/// - the curator
-/// - the main goal
-/// - the optional photo scavenger hunt
 struct WelcomeView: View {
     
     // MARK: - Shared Game State
@@ -64,9 +58,6 @@ struct WelcomeView: View {
     // MARK: - Background
     
     /// Background for the welcome screen.
-    ///
-    /// This version uses gradients so it works even without a custom image.
-    /// Later, you can replace this with Image("welcome_background") if desired.
     private var welcomeBackground: some View {
         ZStack {
             LinearGradient(
@@ -153,7 +144,7 @@ struct WelcomeView: View {
             Text("""
             The museum is running out of time.
 
-            Follow the curator’s leads, gather evidence across Banff, and photograph hidden historical symbols before the museum’s story disappears for good.
+            Follow the curator’s leads, gather story leads across Banff, and photograph its history before the museum’s story disappears for good.
             """)
             .font(.body)
             .foregroundStyle(Color.white.opacity(0.86))
@@ -182,13 +173,13 @@ struct WelcomeView: View {
             
             WelcomeFeatureRow(
                 icon: "magnifyingglass",
-                title: "Collect Evidence",
-                subtitle: "Find clues, tools, and story evidence."
+                title: "Collect Inventory Items",
+                subtitle: "Find historical points of interest, tools, and story leads."
             )
             
             WelcomeFeatureRow(
                 icon: "camera.fill",
-                title: "Photograph Symbols",
+                title: "Photos",
                 subtitle: "Optional photos unlock discounts, endings, and the grand prize clue."
             )
         }
@@ -290,31 +281,31 @@ private struct HowToPlayView: View {
                     instructionSection(
                         icon: "pin.fill",
                         title: "1. Use the Corkboard",
-                        text: "Inside the museum, tap the corkboard to choose investigation leads. Some locations unlock only after earlier clues are solved."
+                        text: "Inside the museum, tap the corkboard to choose story leads. Some locations unlock only after earlier locations are explored."
                     )
                     
                     instructionSection(
                         icon: "backpack.fill",
-                        title: "2. Collect Tools and Evidence",
-                        text: "Tap objects in each scene. Some clues require inventory items, such as the shovel, towel, or long-handled net."
+                        title: "2. Collect Tools and Notes",
+                        text: "Tap objects in each scene. Some investigation may require inventory items, such as a shovel or crowbar."
                     )
                     
                     instructionSection(
                         icon: "camera.fill",
-                        title: "3. Photograph Historical Symbols",
-                        text: "Each location has an optional photo symbol. These are not required for the main story, but they affect the discount rewards and endings."
+                        title: "3. Photograph Banff's History",
+                        text: "Each location has an optional photo. These are not required for the main story, but they affect the discount rewards and endings."
                     )
                     
                     instructionSection(
                         icon: "textformat.abc",
-                        title: "4. Find the Curator’s Name",
-                        text: "Each photo reveals one red-circled letter. Collect all 10 letters to spell the curator’s name and qualify for the grand prize draw."
+                        title: "4. Solve the Curator’s Puzzle",
+                        text: "Each photo reveals one red-circled letter. Collect and unscramble all 9 letters to solve the curator’s puzzle and qualify for the grand prize draw."
                     )
                     
                     instructionSection(
                         icon: "gift.fill",
                         title: "5. Submit Your Results",
-                        text: "At the end, submit your results. Photographing 6 to 8 symbols unlocks a 10% discount. Photographing 9 or 10 unlocks a 20% discount. All 10 plus the curator’s name unlocks grand prize entry."
+                        text: "At the end, submit your results. Photographing 5 to 6 photos unlocks a 10% discount. Photographing 7 or 8 unlocks a 20% discount. All 9 plus the curator’s puzzle solution unlocks the grand prize entry."
                     )
                 }
                 .padding()

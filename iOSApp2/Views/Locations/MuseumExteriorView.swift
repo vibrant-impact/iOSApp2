@@ -6,155 +6,158 @@
 //
 
 import SwiftUI
-import Combine
 
-/// The interactive exterior scene for the museum.
-///
-/// This is one of the player's starting exploration scenes. It displays the
-/// museum exterior image and places tappable hotspots over important objects.
-///
-/// The player can:
-/// - read the curator's mailbox note
-/// - unlock the museum door with a combination lock
-/// - collect the small shovel
-/// - photograph the museum exterior photo symbol
-/// - open the inventory bag
-///
-/// This scene leads into `.museumInterior` once the museum door is unlocked.
 struct MuseumExteriorView: View {
     
-    /// The shared game state for the whole app.
-    ///
-    /// This is used to:
-    /// - check whether the museum door is unlocked
-    /// - unlock the museum door
-    /// - move the player into the museum interior
-    /// - mark the mailbox note as read
-    /// - collect the small shovel
-    /// - check and record photographed symbols
     @EnvironmentObject private var gameState: GameState
     
     
     // MARK: - State
     
-    /// Controls whether the curator's mailbox note alert is shown.
-    @State private var showingMailboxNote = false
-    
-    /// Controls whether the combination lock sheet is shown.
-    ///
-    /// This appears when the player taps the locked museum door.
     @State private var showingDoorLock = false
-    
-    /// Controls whether the inventory sheet is currently shown.
     @State private var showingInventory = false
+    @State private var showingJournal = false
     
-    /// Controls whether the shovel feedback alert is shown.
-    @State private var showingShovelAlert = false
+    @State private var simpleAlertTitle = ""
+    @State private var simpleAlertMessage = ""
+    @State private var showingSimpleAlert = false
     
-    /// The title for the shovel alert.
-    ///
-    /// This changes depending on whether the shovel was newly collected or had
-    /// already been collected.
-    @State private var shovelAlertTitle = ""
-    
-    /// The body message for the shovel alert.
-    @State private var shovelAlertMessage = ""
-    
-    /// The currently active photo symbol, if the camera view should open.
-    ///
-    /// Setting this value presents `FakeCameraView` using `.fullScreenCover`.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
+    @State private var activeZoomOverlay: MuseumExteriorZoomOverlay?
+    @State private var collectedItemOverlay: InventoryItem?
     
     
     // MARK: - Scene Data
     
-    /// The original design size of the museum exterior image.
-    ///
-    /// Hotspot rectangles are defined using this coordinate system.
-    /// `ImageSceneView` scales the hotspots so they stay aligned with the image
-    /// on different device sizes.
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// The tappable hotspot areas for the museum exterior scene.
-    ///
-    /// Each hotspot contains:
-    /// - an `id`, used by `handleHotspotTapped(_:)`
-    /// - a display `name`, useful for debugging
-    /// - a `rect`, positioned in the original `canvasSize` coordinate system
     private let hotspots: [SceneHotspot] = [
         SceneHotspot(
             id: "mailbox",
             name: "Mailbox",
-            rect: CGRect(x: 219, y: 1785, width: 268, height: 323)
+            rect: CGRect(x: 13, y: 1871, width: 354, height: 245)
         ),
-        
         SceneHotspot(
-            id: "door",
-            name: "Door",
-            rect: CGRect(x: 505, y: 1870, width: 184, height: 148)
+            id: "footprint",
+            name: "Massive Mysterious Footprint",
+            rect: CGRect(x: 340, y: 2390, width: 317, height: 328)
         ),
-        
         SceneHotspot(
             id: "shovel",
-            name: "Shovel",
-            rect: CGRect(x: 1048, y: 2142, width: 179, height: 266)
+            name: "Small Shovel",
+            rect: CGRect(x: 992, y: 2291, width: 197, height: 266)
         ),
-        
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 760, y: 1700, width: 220, height: 220)
+            id: "sign",
+            name: "Museum Sign",
+            rect: CGRect(x: 495, y: 1303, width: 471, height: 222)
+        ),
+        SceneHotspot(
+            id: "door",
+            name: "Museum Door",
+            rect: CGRect(x: 719, y: 1674, width: 149, height: 206)
+        ),
+        SceneHotspot(
+            id: "sled",
+            name: "Sled",
+            rect: CGRect(x: 854, y: 1797, width: 189, height: 291)
+        ),
+        SceneHotspot(
+            id: "rabbit",
+            name: "Rabbit",
+            rect: CGRect(x: 68, y: 1713, width: 116, height: 124)
+        ),
+        SceneHotspot(
+            id: "birdhouse",
+            name: "Birdhouse",
+            rect: CGRect(x: 1136, y: 701, width: 151, height: 184)
         )
     ]
+    
+    
+    // MARK: - Active Scene Layers
+    
+    private var activeHotspots: [SceneHotspot] {
+        hotspots.filter { hotspot in
+            switch hotspot.id {
+            case "shovel":
+                return !gameState.hasCollectedShovel
+            default:
+                return true
+            }
+        }
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        var overlays: [SceneOverlayObject] = []
+        
+        if gameState.hasOpenedMailbox {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "mailbox_open",
+                    imageName: "museum_mailbox_open_overlay",
+                    rect: CGRect(x: 187, y: 1909, width: 253, height: 312)
+                )
+            )
+        }
+        
+        if gameState.hasCollectedShovel {
+            overlays.append(
+                SceneOverlayObject(
+                    id: "shovel_gone",
+                    imageName: "museum_shovel_gone_overlay",
+                    rect: CGRect(x: 970, y: 2289, width: 236, height: 287)
+                )
+            )
+        }
+        
+        return overlays
+    }
     
     
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            
-            // MARK: Scene Image and Hotspots
-            
-            // Displays the museum exterior background artwork and overlays
-            // tappable hotspot rectangles.
             ImageSceneView(
-                imageName: "museum_exterior",
+                imageName: "museum_exterior_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
                 showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
+            SnowfallOverlay()
             
-            // MARK: Top HUD
-            
-            // Shows the app title/subtitle and the inventory bag button.
             TopHUDView(
-                locationTitle: "Heart of the Wild",
-                locationSubtitle: "Secrets of Banff",
+                locationTitle: "Discover Banff",
+                locationSubtitle: "The Lost Lemon Mine",
                 onBagTapped: {
                     showingInventory = true
+                },
+                onJournalTapped: {
+                    showingJournal = true
                 }
             )
+            
+            if let activeZoomOverlay {
+                zoomOverlay(for: activeZoomOverlay)
+            }
+            
+            if let collectedItemOverlay {
+                ItemCollectedOverlay(item: collectedItemOverlay) {
+                    self.collectedItemOverlay = nil
+                }
+            }
         }
-        
-        // MARK: Door Lock Sheet
-        
-        // Presents the combination lock when the player taps the locked door.
         .sheet(isPresented: $showingDoorLock) {
             CombinationLockView(
-                correctCode: "1885",
+                correctCode: "1903",
                 onUnlock: {
-                    
-                    // Mark the door as unlocked so future taps can enter
-                    // directly without showing the lock again.
                     gameState.isMuseumDoorUnlocked = true
-                    
-                    // Dismiss the lock sheet.
                     showingDoorLock = false
                     
-                    // Wait briefly for the sheet dismissal animation to finish,
-                    // then move the player into the museum interior.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         gameState.currentLocation = .museumInterior
                     }
@@ -162,59 +165,51 @@ struct MuseumExteriorView: View {
             )
             .presentationDetents([.medium])
         }
-        
-        // MARK: Inventory Sheet
-        
-        // Presents the player's inventory bag.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
         
-        // MARK: Mailbox Note Alert
-        
-        // Shows the curator's note when the mailbox hotspot is tapped.
-        .alert("The museum curator's Note", isPresented: $showingMailboxNote) {
-            Button("Got it") {
-                
-                // Remember that the player has read the note.
-                gameState.hasReadMailboxNote = true
-            }
-        } message: {
-            Text("""
-            If you are reading this, then the museum doors are still closed and time is shorter than I hoped.
-
-            Start where Banff’s protected story began. The hot springs changed everything, and by 1885 the mountains were no longer just scenery — they had become a promise worth preserving.
-
-            I pinned the first leads inside. Follow the evidence, not the rumours.
-
-            And remember: old museum locks are stubborn, but they usually respect important dates.
-
-            — The Museum Curator
-            """)
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
+                .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
         }
         
-        // MARK: Shovel Alert
-        
-        // Shows feedback after the player taps the shovel hotspot.
-        .alert(shovelAlertTitle, isPresented: $showingShovelAlert) {
+        .alert(simpleAlertTitle, isPresented: $showingSimpleAlert) {
             Button("OK") { }
         } message: {
-            Text(shovelAlertMessage)
+            Text(simpleAlertMessage)
         }
+        /// if returning from lair
+        .onAppear {
+            if gameState.hasReturnedFromBigfootLair
+                && !gameState.hasSeenReturnFromLairMessage {
+                
+                gameState.hasSeenReturnFromLairMessage = true
+                
+                simpleAlertTitle = "Back at the Museum"
+                simpleAlertMessage = """
+                You wake in the snow outside the museum.
+
+                Your camera is still around your neck.
+
+                Your coat feels heavier than before.
+
+                In your pocket is a small gold nugget.
+                """
+                showingSimpleAlert = true
+            }
+        }
+
         
-        // MARK: Camera View
-        
-        // Opens the fake camera when the player taps the photo symbol hotspot.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
+        .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { capturedSymbol in
-                    
-                    // Record the photographed symbol in the game state.
-                    gameState.photographSymbol(capturedSymbol)
+                photo: photo,
+                alreadyCaptured: gameState.hasPhoto(photo),
+                onCapture: { capturedPhoto in
+                    gameState.capturePhoto(capturedPhoto)
                 }
             )
         }
@@ -223,87 +218,169 @@ struct MuseumExteriorView: View {
     
     // MARK: - Hotspot Handling
     
-    /// Handles taps on the museum exterior scene hotspots.
-    ///
-    /// The hotspot's `id` determines what happens:
-    /// - `"mailbox"` shows the curator's note
-    /// - `"door"` opens the lock or enters the museum
-    /// - `"shovel"` collects the small shovel
-    /// - `"photo_symbol"` opens the fake camera
-    ///
-    /// - Parameter hotspot: The hotspot the player tapped.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
-            
         case "mailbox":
-            // Show the curator's note.
-            showingMailboxNote = true
-            
-        case "door":
-            // Either open the combination lock or enter the museum.
-            handleDoorTapped()
+            activeZoomOverlay = gameState.hasOpenedMailbox ? .mailboxOpen : .mailboxClosed
             
         case "shovel":
-            // Collect the shovel or show that it was already collected.
-            handleShovelTapped()
+            activeZoomOverlay = .shovel
             
-        case "photo_symbol":
-            // Open the camera for the museum exterior photo symbol.
-            activePhotoSymbol = .museumExterior
+        case "footprint":
+            activePhoto = Photo.museumExterior
+            
+        case "sign":
+            activeZoomOverlay = .sign
+            
+        case "door":
+            if gameState.isMuseumDoorUnlocked {
+                gameState.currentLocation = .museumInterior
+            } else {
+                activeZoomOverlay = .door
+            }
+            
+        case "sled":
+            showSimpleAlert(
+                title: "Old Sled",
+                message: "An old wooden sled rests in the snow, worn smooth from years of winter use."
+            )
+            
+        case "rabbit":
+            showSimpleAlert(
+                title: "Snowshoe Hare",
+                message: "A snowshoe hare watches you from the edge of the museum grounds, perfectly still against the winter quiet."
+            )
+            
+        case "birdhouse":
+            showSimpleAlert(
+                title: "Birdhouse",
+                message: "A tiny birdhouse hangs above the snow, its entrance rimmed with frost."
+            )
             
         default:
-            // Ignore unknown hotspot IDs.
             break
         }
     }
     
-    
-    // MARK: - Door Interaction
-    
-    /// Handles the museum door hotspot.
-    ///
-    /// If the door has already been unlocked, the player enters the museum.
-    /// Otherwise, the combination lock sheet is shown.
-    private func handleDoorTapped() {
-        if gameState.isMuseumDoorUnlocked {
-            
-            // Door is already unlocked, so enter the museum immediately.
-            gameState.currentLocation = .museumInterior
-            
-        } else {
-            
-            // Door is locked, so show the combination lock puzzle.
-            showingDoorLock = true
-        }
+    private func showSimpleAlert(title: String, message: String) {
+        simpleAlertTitle = title
+        simpleAlertMessage = message
+        showingSimpleAlert = true
     }
     
     
-    // MARK: - Shovel Interaction
+    // MARK: - Zoom Overlays
     
-    /// Handles the small shovel hotspot.
-    ///
-    /// If the shovel has not been collected yet, it is added to the player's
-    /// inventory through `gameState.collectShovel()`.
-    ///
-    /// If it has already been collected, the player gets a reminder message.
-    private func handleShovelTapped() {
-        if gameState.hasCollectedShovel {
-            
-            // The player already has the shovel.
-            shovelAlertTitle = "Already Collected"
-            shovelAlertMessage = "You already collected the small shovel."
-            
-        } else {
-            
-            // Add the shovel to the player's inventory/game state.
-            gameState.collectShovel()
-            
-            shovelAlertTitle = "Small Shovel Found"
-            shovelAlertMessage = "You pull a little metal shovel from the snow and add it to your bag."
-        }
+    @ViewBuilder
+    private func zoomOverlay(for overlay: MuseumExteriorZoomOverlay) -> some View {
+        switch overlay {
         
-        // Show the appropriate shovel alert.
-        showingShovelAlert = true
+        case .mailboxClosed:
+            HotspotZoomOverlay(
+                title: "Mailbox",
+                imageName: "zoom_museum_mailbox_open",
+                description: "There's a letter inside with your name on it.",
+                primaryButtonTitle: "Read Letter",
+                onPrimaryAction: {
+                    gameState.hasOpenedMailbox = true
+                    activeZoomOverlay = .mailboxOpen
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .mailboxOpen:
+            HotspotZoomOverlay(
+                title: "The Curator's Note",
+                imageName: "zoom_museum_mailbox_open",
+                description: """
+                Welcome to Banff.
+
+                I am glad your camera is ready, because this museum is running out of time.
+
+                Make your way through Banff and gather what you need to write the ultimate story — one that can revive public interest and save the museum from closure.
+
+                I believe you are the one who can answer the question I never could:
+
+                Who guards the Lost Lemon Mine?
+
+                History holds the key to the door.
+
+                — The Museum Curator
+                """,
+                
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    gameState.hasReadMailboxNote = true
+                    activeZoomOverlay = nil
+                },
+                
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .shovel:
+            HotspotZoomOverlay(
+                title: "Small Shovel",
+                imageName: "zoom_museum_shovel",
+                description: "A small metal shovel leans in the snow. It could help dig through packed drifts.",
+                primaryButtonTitle: "Take Shovel",
+                onPrimaryAction: {
+                    gameState.collectShovel()
+                    activeZoomOverlay = nil
+                    collectedItemOverlay = .smallShovel
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .sign:
+            HotspotZoomOverlay(
+                title: "Museum Sign",
+                imageName: "zoom_museum_sign",
+                description: "The sign marks the Banff Park Museum, built in 1903. The date feels important.",
+                primaryButtonTitle: "Close",
+                onPrimaryAction: {
+                    activeZoomOverlay = nil
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+            
+        case .door:
+            HotspotZoomOverlay(
+                title: "Front Door",
+                imageName: "zoom_museum_door",
+                description: "The museum door is locked with an old number code. The curator's note said history holds the key.",
+                primaryButtonTitle: "Try the Lock",
+                onPrimaryAction: {
+                    activeZoomOverlay = nil
+                    showingDoorLock = true
+                },
+                onClose: {
+                    activeZoomOverlay = nil
+                }
+            )
+        }
+    }
+}
+
+
+// MARK: - Zoom Overlay Types
+
+private enum MuseumExteriorZoomOverlay: Identifiable {
+    case mailboxClosed
+    case mailboxOpen
+    case shovel
+    case sign
+    case door
+    
+    var id: String {
+        String(describing: self)
     }
 }
 

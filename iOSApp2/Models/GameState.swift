@@ -8,361 +8,431 @@
 import Foundation
 import Combine
 
-/// GameState is the main shared "brain" of the game.
-/// It tracks the player's current location, inventory, story progress,
-/// collected evidence, optional photo scavenger hunt progress, and endings.
 final class GameState: ObservableObject {
     
-    // MARK: - App Start State
-
-    /// Tracks whether the player has left the welcome screen and started the game.
-    @Published var hasStartedGame: Bool = false
+    // MARK: - App State
     
-    // MARK: - Current Location
-    
-    /// The location currently being displayed by ContentView.
+    @Published var hasStartedGame = false
     @Published var currentLocation: Location = .museumExterior
     
     
-    // MARK: - Museum Exterior Progress
+    // MARK: - Museum Exterior
     
-    /// Tracks whether the player has read the museum curator's note in the mailbox.
-    @Published var hasReadMailboxNote: Bool = false
+    @Published var hasOpenedMailbox = false
+    @Published var hasReadMailboxNote = false
+    @Published var hasCollectedShovel = false
+    @Published var isMuseumDoorUnlocked = false
+    @Published var hasSeenReturnFromLairMessage = false
+    // @Published var hasPhotographedBigfootFootprint = false
     
-    /// Tracks whether the player has picked up the shovel outside the museum.
-    @Published var hasCollectedShovel: Bool = false
     
-    /// Tracks whether the museum door lock has been solved.
-    @Published var isMuseumDoorUnlocked: Bool = false
+    // MARK: - Museum Interior
+    
+    
+    
+    // MARK: - Bow Falls
+    
+    @Published var hasCollectedGaffHook = false
+    @Published var hasOpenedFallsCanister = false
+    @Published var hasCollectedWoodenMatches = false
+    // @Published var hasPhotographedDouglasFirForest = false
+    
+    
+    // MARK: - Cave and Basin
+    
+    @Published var hasOpenedBasinChest = false
+    @Published var hasCollectedVintageBrassToken = false
+    // @Published var hasPhotographedVent = false
+    
+    
+    // MARK: - Banff Springs Hotel
+    
+    @Published var hasPhotographedGhostBride = false
+    @Published var hasFoundCafeLead = false
+    
+    
+    // MARK: - Downtown Banff
+    
+    @Published var hasEnteredSnowyOwlCafe = false
+    @Published var hasTradedVintageBrassToken = false
+    @Published var hasCollectedObservatoryStoryLead = false
+    // @Published var hasPhotographedIceSculptures = false
+    
+    
+    // MARK: - Upper Hot Springs
+    
+    @Published var hasCollectedObservatoryLockerKey = false
+    // @Published var hasPhotographedMarilynMonroe = false
+    // @Published var hasCollectedCafeLead = false
+    
+    // MARK: - Sulphur Mountain
+    
+    @Published var hasMeltedWeatherStationDoorIce = false
+    // @Published var hasPhotographedBanffTown = false
+    
+    
+    // MARK: - Observatory Interior
+    
+    @Published var hasReadObservatoryLogbook = false
+    @Published var hasCollectedObservatoryJournalLead = false
+    @Published var hasOpenedObservatoryLocker = false
+    @Published var hasCollectedRustyCrowbar = false
+    
+    
+    // MARK: - Lake Minnewanka
+    
+    @Published var hasOpenedMinnewankaCrate = false
+    @Published var hasCollectedWoodcuttersAxe = false
+    // @Published var hasPhotographedSunkenTown = false
+    
+    
+    // MARK: - Tunnel Mountain
+    
+    @Published var hasBrokenCaveEntranceBoards = false
+    @Published var hasTriggeredIcicleFall = false
+    // @Published var hasPhotographedSnowyOwl = false
+    
+    
+    // MARK: - Bigfoot's Lair
+    
+    @Published var hasWokenInBigfootLair = false
+    @Published var hasInspectedLairExit = false
+    @Published var hasMetBigfootFamily = false
+    @Published var hasInspectedLostLemonMine = false
+    @Published var hasTakenBigfootEvidencePhoto = false
+    @Published var hasEscapedBigfootLair = false
+    @Published var hasReturnedFromBigfootLair = false
+    @Published var hasFoundGoldNuggetInPocket = false
+    @Published var hasSpokenToCuratorAfterLair = false
+    
     
     
     // MARK: - Inventory
     
-    /// Items the player has collected and can use later.
-    @Published var inventory: [InventoryItem] = []
+    /// Items found at least once, even if later used.
+    @Published var collectedInventoryItemIDs: Set<String> = []
     
+    /// Items that have been consumed, traded, or spent.
+    @Published var usedInventoryItemIDs: Set<String> = []
     
-    // MARK: - Story Leads and Evidence
-    
-    /// All story leads available in the game.
-    @Published var storyLeads: [StoryLead] = StoryLead.all
-    
-    /// The IDs of story leads the player has completed.
-    @Published var completedLeadIDs: Set<String> = []
-    
-    /// Story evidence collected during investigations.
-    @Published var collectedEvidence: [EvidenceItem] = []
-    
-    
-    // MARK: - Optional Photo Scavenger Hunt
-    
-    /// The IDs of optional historical symbols the player has photographed.
-    /// These are separate from story evidence.
-    @Published var photographedSymbolIDs: Set<String> = []
-    
-    /// The hidden curator name needed for the grand prize ending.
-    let curatorNameAnswer: String = "JACQUELINE"
-    
-    
-    // MARK: - Inventory Helpers
-    
-    /// Adds an item to the player's inventory, but only if it is not already there.
-    func addInventoryItem(_ item: InventoryItem) {
-        guard !hasInventoryItem(item.id) else { return }
-        inventory.append(item)
-    }
-    
-    /// Checks whether the player already has an inventory item.
-    func hasInventoryItem(_ id: String) -> Bool {
-        inventory.contains { $0.id == id }
-    }
-    
-    /// Collects the shovel from the museum exterior.
-    /// This also adds the shovel to the inventory.
-    func collectShovel() {
-        guard !hasCollectedShovel else { return }
-        
-        hasCollectedShovel = true
-        addInventoryItem(.smallShovel)
-    }
-    
-    
-    // MARK: - Evidence Helpers
-    
-    /// Adds story evidence, but only if it has not already been collected.
-    func collectEvidence(_ evidence: EvidenceItem) {
-        guard !hasEvidence(evidence.id) else { return }
-        collectedEvidence.append(evidence)
-    }
-    
-    /// Checks whether a specific piece of evidence has already been collected.
-    func hasEvidence(_ id: String) -> Bool {
-        collectedEvidence.contains { $0.id == id }
-    }
-    
-    /// Tracks whether the player has retrieved the dark object from the Cave and Basin pool.
-    /// This is required to unlock the second phase of locations.
-    var hasRecoveredCavePoolObject: Bool {
-        hasEvidence(EvidenceItem.sealedOilclothFragment.id)
-    }
-    
-    
-    // MARK: - Lead Groups
-    
-    /// First phase leads.
-    var firstPhaseLeads: [StoryLead] {
-        storyLeads.filter { $0.phase == .first }
-    }
-    
-    /// Second phase leads.
-    var secondPhaseLeads: [StoryLead] {
-        storyLeads.filter { $0.phase == .second }
-    }
-    
-    /// Final phase leads.
-    var finalPhaseLeads: [StoryLead] {
-        storyLeads.filter { $0.phase == .final }
-    }
-    
-    /// Returns true when all first phase leads are completed.
-    var hasCompletedFirstPhase: Bool {
-        firstPhaseLeads.allSatisfy { completedLeadIDs.contains($0.id) }
-    }
-    
-    /// Returns true when all second phase leads are completed.
-    var hasCompletedSecondPhase: Bool {
-        secondPhaseLeads.allSatisfy { completedLeadIDs.contains($0.id) }
-    }
-    
-    
-    // MARK: - Lead Unlocking
-    
-    /// Determines whether a lead can currently be selected.
-    ///
-    /// First phase leads are always available.
-    /// Second phase leads require:
-    /// - all first phase leads completed
-    /// - the Cave and Basin pool object recovered
-    ///
-    /// Final phase leads require:
-    /// - all first phase leads completed
-    /// - all second phase leads completed
-    /// - the Cave and Basin pool object recovered
-    func isLeadUnlocked(_ lead: StoryLead) -> Bool {
-        switch lead.phase {
-        case .first:
-            return true
-            
-        case .second:
-            return hasCompletedFirstPhase && hasRecoveredCavePoolObject
-            
-        case .final:
-            return hasCompletedFirstPhase && hasCompletedSecondPhase && hasRecoveredCavePoolObject
+    /// Items currently visible in the player's bag.
+    var inventory: [InventoryItem] {
+        InventoryItem.all.filter { item in
+            collectedInventoryItemIDs.contains(item.id)
+            && !usedInventoryItemIDs.contains(item.id)
         }
     }
     
-    /// Checks whether a lead has already been completed.
-    func isLeadCompleted(_ lead: StoryLead) -> Bool {
-        completedLeadIDs.contains(lead.id)
+    /// Completion of all lair hotspot interaction triggers ejection from lair
+    var hasCompletedRequiredLairInteractions: Bool {
+        hasInspectedLairExit
+        && hasMetBigfootFamily
+        && hasInspectedLostLemonMine
+        && hasTakenBigfootEvidencePhoto
     }
     
-    /// Moves the player to the selected lead's location if it is unlocked.
-    func selectLead(_ lead: StoryLead) {
-        guard isLeadUnlocked(lead) else { return }
-        currentLocation = lead.location
-    }
+    // MARK: - Corkboard Leads
     
-    /// Marks a lead as complete.
-    ///
-    /// The `addPlaceholderEvidence` option exists so placeholder leads can still work,
-    /// but real custom locations can complete without adding generic placeholder evidence.
-    func completeLead(_ lead: StoryLead, addPlaceholderEvidence: Bool = true) {
-        completedLeadIDs.insert(lead.id)
-        
-        if addPlaceholderEvidence {
-            let evidence = EvidenceItem.placeholderEvidence(for: lead)
-            collectEvidence(evidence)
-        }
-    }
-    
-    /// Checks whether the required evidence for a lead has been collected.
-    /// If yes, the lead is marked complete.
-    func completeLeadIfNeeded(_ lead: StoryLead) {
-        guard !isLeadCompleted(lead) else { return }
-        
-        let requiredEvidenceIDs = requiredEvidenceIDs(for: lead)
-        
-        guard !requiredEvidenceIDs.isEmpty else { return }
-        
-        let hasAllRequiredEvidence = requiredEvidenceIDs.allSatisfy { evidenceID in
-            hasEvidence(evidenceID)
-        }
-        
-        if hasAllRequiredEvidence {
-            completeLead(lead, addPlaceholderEvidence: false)
-        }
-    }
-    
-    /// Lists the required story evidence for each lead.
-    ///
-    /// These are required for story progression.
-    /// They are separate from optional photo scavenger hunt symbols.
-    func requiredEvidenceIDs(for lead: StoryLead) -> [String] {
-        switch lead.id {
-        case "cave_and_basin":
-            return [
-                EvidenceItem.caveSignPhoto.id,
-                EvidenceItem.goldDustedCloth.id
-            ]
-            
-        case "bow_falls":
-            return [
-                EvidenceItem.parksNetTagPhoto.id,
-                EvidenceItem.oldSurveyMarker.id
-            ]
-            
-        case "banff_springs_hotel":
-            return [
-                EvidenceItem.guestLedgerPage.id,
-                EvidenceItem.servicePathFootprint.id
-            ]
-            
-        case "hot_springs":
-            return [
-                EvidenceItem.mineralSpringToken.id
-            ]
-            
-        case "sulphur_mountain_gondola":
-            return [
-                EvidenceItem.ridgeRouteMarker.id
-            ]
-            
-        case "tunnel_mountain":
-            return [
-                EvidenceItem.tunnelMountainTrack.id
-            ]
-            
-        default:
-            return []
-        }
-    }
-    
-    /// Finds the story lead connected to a specific location.
-    func lead(for location: Location) -> StoryLead? {
-        storyLeads.first { $0.location == location }
-    }
+    let locationLeads: [LocationLead] = LocationLead.all
     
     
-    // MARK: - Optional Photo Scavenger Hunt Helpers
+    // MARK: - Journal Photos
     
-    /// Records that the player photographed an optional historical symbol.
-    ///
-    /// These photos are used for:
-    /// - discount rewards
-    /// - ending quality
-    /// - hidden curator name letters
-    func photographSymbol(_ symbol: PhotoSymbol) {
-        photographedSymbolIDs.insert(symbol.id)
-    }
+    /// Stores the IDs of photos taken that contribute to the journal and unlock letters.
+    @Published var photoIDs: Set<String> = []
     
-    /// Checks whether a specific optional photo symbol has already been photographed.
-    func hasPhotographedSymbol(_ symbolID: String) -> Bool {
-        photographedSymbolIDs.contains(symbolID)
-    }
+    let curatorAnswer = "SASQUATCH" // The final answer to the mystery.
     
-    /// Number of optional historical symbols the player has photographed.
-    var photographedSymbolCount: Int {
-        photographedSymbolIDs.count
-    }
-    
-    /// Total number of optional historical photo symbols in the game.
-    var totalPhotoSymbolCount: Int {
-        PhotoSymbol.all.count
-    }
-    
-    /// Reveals the secret letters from photographed symbols in the intended order.
-    ///
-    /// If all 10 symbols are collected, this should spell:
-    /// JACQUELINE
+    /// Computes the discovered letters from journal photos.
     var discoveredCuratorLetters: String {
-        PhotoSymbol.all
-            .filter { photographedSymbolIDs.contains($0.id) }
+        // Ensure the correct photos are mapped to letters through Photo.swift
+        Photo.all
+            .filter { photoIDs.contains($0.id) }
             .map { $0.secretLetter }
             .joined()
     }
     
+    // Computed property for the total number of possible journal photos.
+    var totalPhotoCount: Int {
+        Photo.all.count
+    }
     
-    // MARK: - Discount Rewards
     
-    /// Discount code based on the number of optional symbols photographed.
-    ///
-    /// Reward tiers:
-    /// - 0 to 5 symbols: no discount
-    /// - 6 to 8 symbols: 10% discount
-    /// - 9 to 10 symbols: 20% discount
+    // MARK: - Inventory Helpers
+    
+    func collectInventoryItem(_ item: InventoryItem) {
+        // If already collected and not used, do nothing.
+        guard !collectedInventoryItemIDs.contains(item.id) || !usedInventoryItemIDs.contains(item.id) else { return }
+        
+        // If it was used, "re-collect" it by removing from used.
+        if usedInventoryItemIDs.contains(item.id) {
+            usedInventoryItemIDs.remove(item.id)
+        }
+        collectedInventoryItemIDs.insert(item.id)
+        
+        // Update specific @Published booleans for convenience.
+        updateCollectedFlag(for: item)
+    }
+    
+    func useInventoryItem(_ item: InventoryItem) {
+        guard collectedInventoryItemIDs.contains(item.id) else { return }
+        usedInventoryItemIDs.insert(item.id)
+    }
+    
+    func hasInventoryItem(_ item: InventoryItem) -> Bool {
+        collectedInventoryItemIDs.contains(item.id)
+        && !usedInventoryItemIDs.contains(item.id)
+    }
+    
+    func hasCollectedInventoryItem(_ item: InventoryItem) -> Bool {
+        collectedInventoryItemIDs.contains(item.id)
+    }
+    
+    func hasUsedInventoryItem(_ item: InventoryItem) -> Bool {
+        usedInventoryItemIDs.contains(item.id)
+    }
+    
+    func collectShovel() {
+        collectInventoryItem(.smallShovel)
+    }
+    
+    private func updateCollectedFlag(for item: InventoryItem) {
+        switch item {
+        case .smallShovel:
+            hasCollectedShovel = true
+        case .gaffHook:
+            hasCollectedGaffHook = true
+        case .woodenMatches:
+            hasCollectedWoodenMatches = true
+        case .cafeLead:
+            hasFoundCafeLead = true
+        case .vintageBrassToken:
+            hasCollectedVintageBrassToken = true
+        case .observatoryStoryLead:
+            hasCollectedObservatoryStoryLead = true
+        case .observatoryLockerKey:
+            hasCollectedObservatoryLockerKey = true
+        case .rustyCrowbar:
+            hasCollectedRustyCrowbar = true
+        case .woodcuttersAxe:
+            hasCollectedWoodcuttersAxe = true
+        case .observatoryJournalLead:
+            hasCollectedObservatoryJournalLead = true
+        case .lostLemonGoldNugget:
+            hasReturnedFromBigfootLair = true
+        }
+    }
+    
+    
+    // MARK: - Progression Requirements & Unlocks
+    
+    /// Checks if the player has the essential items for the second phase of the game.
+    var hasCompletedSecondPhaseItems: Bool {
+        hasCollectedInventoryItem(.gaffHook)
+        && hasCollectedInventoryItem(.woodenMatches)
+        && hasCollectedInventoryItem(.vintageBrassToken)
+    }
+    /// Checks if the player has enabled the observatory.
+    var hasUnlockedObservatory: Bool {
+        hasMeltedWeatherStationDoorIce
+    }
+    
+    /// Checks if the player has enabled Lake Minnewanka.
+    var hasUnlockedLakeMinnewanka: Bool {
+        hasCollectedRustyCrowbar
+    }
+    
+    /// Checks if the player has enabled Tunnel Mountain.
+    var hasUnlockedTunnelMountain: Bool {
+        hasCollectedWoodcuttersAxe
+    }
+    
+    
+    // MARK: - Corkboard Helpers
+    
+    /// Determines if a location lead is *available* to be selected from the corkboard.
+    func isLocationLeadAvailable(_ lead: LocationLead) -> Bool {
+        switch lead.location {
+        case .bowFalls, .caveAndBasin, .banffSpringsHotel:
+            return true // First phase locations are always available.
+            
+        case .hotSprings, .downtownBanff, .sulphurMountain:
+            return hasCompletedSecondPhaseItems // Second phase available if first phase items are collected.
+            
+        case .observatory:
+            return hasUnlockedObservatory // Available if door melted.
+            
+        case .lakeMinnewanka:
+            return hasUnlockedLakeMinnewanka // Available if crowbar collected.
+            
+        case .tunnelMountain:
+            return hasUnlockedTunnelMountain // Available if axe collected.
+            
+        case .museumExterior, .museumInterior, .bigfootLair:
+            return true // These locations are not directly managed by corkboard progression.
+        }
+    }
+    
+    /// Checks if a location lead's primary objective has been met.
+    func isLocationLeadCompleted(_ lead: LocationLead) -> Bool {
+        switch lead.location {
+        case .bowFalls:
+            return hasCollectedGaffHook && hasCollectedWoodenMatches
+        case .caveAndBasin:
+            return hasCollectedVintageBrassToken
+        case .banffSpringsHotel:
+            return hasPhotographedGhostBride
+        case .hotSprings:
+            // Location is considered "completed" for corkboard purposes if the lead was found AND the researcher interaction happened.
+            return hasFoundCafeLead && hasTradedVintageBrassToken
+        case .downtownBanff:
+            // Completed once the token is traded.
+            return hasTradedVintageBrassToken
+        case .sulphurMountain:
+            return hasMeltedWeatherStationDoorIce
+        case .observatory:
+            return hasCollectedRustyCrowbar && hasCollectedObservatoryJournalLead
+        case .lakeMinnewanka:
+            return hasCollectedWoodcuttersAxe
+        case .tunnelMountain:
+            return hasTriggeredIcicleFall
+        default:
+            return false
+        }
+    }
+    
+    /// Navigates the player to a location, handling corkboard selection.
+    func selectLocationLead(_ lead: LocationLead) {
+        guard isLocationLeadAvailable(lead) else { return }
+        currentLocation = lead.location
+    }
+    
+    /// triggers ending sequence
+    func finishBigfootLairSequence() {
+        hasEscapedBigfootLair = true
+        hasReturnedFromBigfootLair = true
+        hasFoundGoldNuggetInPocket = true
+        
+        collectInventoryItem(.lostLemonGoldNugget)
+        
+        currentLocation = .museumExterior
+    }
+    
+    // MARK: - Journal Photo Helpers
+    
+    func capturePhoto(_ photo: Photo) {
+        guard !photoIDs.contains(photo.id) else { return }
+        
+        photoIDs.insert(photo.id)
+        // Update specific @Published flags for photos that trigger unique game events.
+        updatePhotoFlag(for: photo)
+    }
+    
+    /// Checks if a specific Photo object has been captured.
+    func hasPhoto(_ photo: Photo) -> Bool {
+        photoIDs.contains(photo.id)
+    }
+    
+    /// Checks if a photo with a specific ID has been captured.
+    func hasPhoto(_ photoID: String) -> Bool {
+        photoIDs.contains(photoID)
+    }
+    
+    /// Returns all captured journal photos.
+    var journalPhotos: [Photo] {
+        Photo.all.filter { photoIDs.contains($0.id) }
+    }
+    
+    /// The current count of journal photos taken.
+    var photoCount: Int {
+        photoIDs.count
+    }
+    
+    /// Helper to update specific @Published flags for unique photo events.
+    private func updatePhotoFlag(for photo: Photo) {
+        switch photo.id {
+        case Photo.museumExterior.id:
+            // This photo might set a flag if needed for early game hints.
+            break
+        case Photo.bowFalls.id:
+            break
+        case Photo.caveAndBasin.id:
+            break
+        case Photo.banffSpringsHotel.id:
+            hasPhotographedGhostBride = true
+        case Photo.downtownBanff.id:
+            break
+        case Photo.hotSprings.id:
+            break
+        case Photo.sulphurMountain.id:
+            // This photo might set a flag if needed for context.
+            break
+        case Photo.lakeMinnewanka.id:
+            break
+        case Photo.tunnelMountain.id:
+            break
+        default:
+            break
+        }
+    }
+    
+    
+    // MARK: - Rewards
+    
     var photoRewardCode: String {
-        switch photographedSymbolCount {
-        case 9...10:
+        switch photoCount {
+        case 7...9:
             return "BANFF20"
-        case 6...8:
+        case 5...6:
             return "BANFF10"
         default:
             return "LOCKED"
         }
     }
     
-    /// User-facing reward message for the submission screen.
     var photoRewardMessage: String {
-        switch photographedSymbolCount {
-        case 9...10:
-            return "You photographed \(photographedSymbolCount) historical symbols and unlocked a 20% discount code."
-            
-        case 6...8:
-            return "You photographed \(photographedSymbolCount) historical symbols and unlocked a 10% discount code."
-            
+        switch photoCount {
+        case 7...9:
+            return "You photographed \(photoCount) journal photos and unlocked a 20% discount code."
+        case 5...6:
+            return "You photographed \(photoCount) journal photos and unlocked a 10% discount code."
         default:
-            return "You photographed \(photographedSymbolCount) historical symbols. Photograph at least 6 to unlock a discount code."
+            return "You photographed \(photoCount) journal photos. Photograph at least 5 to unlock a discount code."
         }
     }
     
     
-    // MARK: - Curator Name Puzzle
+    // MARK: - Final Puzzle
     
-    /// Checks whether the player entered the correct curator name.
+    /// Checks if the player's final answer to the curator's question is correct.
     func isCuratorAnswerCorrect(_ answer: String) -> Bool {
         let cleanedAnswer = answer
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
         
-        return cleanedAnswer == curatorNameAnswer
+        return cleanedAnswer == curatorAnswer
     }
     
     
     // MARK: - Ending
     
-    /// Determines which ending the player receives.
-    ///
-    /// Ending logic:
-    /// - 0 to 5 photos: museum lost
-    /// - 6 to 8 photos: partial exhibit
-    /// - 9 or 10 photos: museum saved
-    /// - all 10 photos plus correct curator name: legendary legacy ending
-    func ending(for curatorAnswer: String) -> GameEnding {
-        let solvedCuratorName = isCuratorAnswerCorrect(curatorAnswer)
+    /// Determines the game ending based on photos and final answer.
+    func ending(for answer: String) -> GameEnding {
+        let solvedFinalAnswer = isCuratorAnswerCorrect(answer)
         
-        if photographedSymbolCount == totalPhotoSymbolCount && solvedCuratorName {
+        if photoCount == totalPhotoCount && solvedFinalAnswer {
             return .legendaryLegacy
         }
         
-        switch photographedSymbolCount {
-        case 9...10:
-            return .museumSaved
-            
-        case 6...8:
-            return .partialExhibit
-            
+        switch photoCount {
+        case 7...9:
+            return .newFunding
+        case 5...6:
+            return .interestReignited
         default:
             return .museumLost
         }
     }
 }
+    
+    

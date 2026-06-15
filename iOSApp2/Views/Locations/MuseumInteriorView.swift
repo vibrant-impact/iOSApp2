@@ -6,126 +6,142 @@
 //
 
 import SwiftUI
-import Combine
 
-/// MuseumInteriorView is the main hub inside the museum.
-///
-/// The background image should include:
-/// - the museum interior
-/// - the curator
-/// - the corkboard
-///
-/// The corkboard is clickable. When tapped, it opens a close-up
-/// full-screen corkboard view where the player can select story leads.
 struct MuseumInteriorView: View {
     
-    // MARK: - Shared Game State
-    
-    /// Global game state shared across the app.
     @EnvironmentObject private var gameState: GameState
     
     
-    // MARK: - View State
+    // MARK: - State
     
-    /// Shows the inventory/bag sheet.
     @State private var showingInventory = false
-    
-    /// Shows the evidence list sheet.
-    @State private var showingEvidence = false
-    
-    /// Shows the final scavenger hunt submission screen.
+    @State private var showingJournal = false
     @State private var showingSubmission = false
-    
-    /// Shows the corkboard close-up screen.
     @State private var showingCorkboardCloseup = false
     
-    /// Opens the fake camera when this contains a photo symbol.
-    @State private var activePhotoSymbol: PhotoSymbol?
+    @State private var activePhoto: Photo?
     
-    /// Controls simple alert popups.
     @State private var showingAlert = false
-    
-    /// Alert title.
     @State private var alertTitle = ""
-    
-    /// Alert message.
     @State private var alertMessage = ""
     
+    @State private var showingCuratorEnding = false
+    @State private var showingCuratorAlert = false
+    @State private var curatorAlertTitle = ""
+    @State private var curatorAlertMessage = ""
     
-    // MARK: - Scene Setup
     
-    /// The original size of your vertical background artwork.
-    ///
-    /// Hotspot coordinates are based on this canvas size.
+    // MARK: - Scene Data
+    
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
-    /// Tappable areas on the museum interior image.
-    ///
-    /// These are approximate. Adjust the rectangles later to match your art.
     private let hotspots: [SceneHotspot] = [
-        
-        // Main corkboard hotspot.
-        // Tapping this opens the close-up CorkboardView.
         SceneHotspot(
             id: "corkboard",
-            name: "Corkboard",
-            rect: CGRect(x: 190, y: 520, width: 900, height: 1030)
+            name: "Corkboard Hub",
+            rect: CGRect(x: 110, y: 1444, width: 299, height: 437)
         ),
-        
-        // Curator hotspot.
-        // Tapping this gives a short reminder from the curator.
         SceneHotspot(
             id: "curator",
-            name: "Curator",
-            rect: CGRect(x: 380, y: 1500, width: 520, height: 540)
+            name: "Museum Curator",
+            rect: CGRect(x: 37, y: 1877, width: 234, height: 195)
         ),
-        
-        // Optional photo scavenger hunt hotspot.
-        // This counts toward endings and discount rewards.
         SceneHotspot(
-            id: "photo_symbol",
-            name: "Photo Symbol",
-            rect: CGRect(x: 535, y: 2050, width: 220, height: 220)
+            id: "wild_bill_exhibit",
+            name: "Wild Bill Peyto Exhibit",
+            rect: CGRect(x: 700, y: 1648, width: 386, height: 424)
         ),
-        
-        // Optional evidence table hotspot.
         SceneHotspot(
-            id: "evidence_table",
-            name: "Evidence Table",
-            rect: CGRect(x: 120, y: 2150, width: 380, height: 350)
+            id: "logbook",
+            name: "Visitor Logbook",
+            rect: CGRect(x: 198, y: 2044, width: 241, height: 102)
         ),
-        
-        // Optional submission hotspot.
         SceneHotspot(
-            id: "submit_results",
-            name: "Submit Results",
-            rect: CGRect(x: 790, y: 2150, width: 380, height: 350)
+            id: "rotary_phone",
+            name: "Rotary Phone",
+            rect: CGRect(x: 391, y: 1954, width: 130, height: 101)
+        ),
+        SceneHotspot(
+            id: "grizzly_display",
+            name: "Grizzly Display",
+            rect: CGRect(x: 589, y: 1365, width: 209, height: 195)
+        ),
+        SceneHotspot(
+            id: "porcupine",
+            name: "Porcupine",
+            rect: CGRect(x: 912, y: 1485, width: 173, height: 151)
+        ),
+        SceneHotspot(
+            id: "squirrel",
+            name: "Squirrel",
+            rect: CGRect(x: 773, y: 1511, width: 108, height: 111)
+        ),
+        SceneHotspot(
+            id: "fireplace",
+            name: "Fireplace",
+            rect: CGRect(x: 1118, y: 1364, width: 147, height: 159)
+        ),
+        SceneHotspot(
+            id: "canoe",
+            name: "Hanging Canoe",
+            rect: CGRect(x: 190, y: 452, width: 519, height: 465)
+        ),
+        SceneHotspot(
+            id: "mountain_goat",
+            name: "Mountain Goat",
+            rect: CGRect(x: 393, y: 1141, width: 171, height: 146)
+        ),
+        SceneHotspot(
+            id: "moose_head",
+            name: "Moose Head",
+            rect: CGRect(x: 733, y: 1031, width: 191, height: 199)
+        ),
+        SceneHotspot(
+            id: "raccoon_display",
+            name: "Raccoon Display",
+            rect: CGRect(x: 256, y: 1255, width: 168, height: 213)
+        ),
+        SceneHotspot(
+            id: "mineral_gems_display",
+            name: "Mineral Gems Display",
+            rect: CGRect(x: 491, y: 1533, width: 206, height: 195)
+        ),
+        SceneHotspot(
+            id: "owls",
+            name: "Owls",
+            rect: CGRect(x: 581, y: 1161, width: 162, height: 210)
+        ),
+        SceneHotspot(
+            id: "coal_mining_display",
+            name: "Coal Mining Display",
+            rect: CGRect(x: 1147, y: 1597, width: 143, height: 339)
         )
     ]
+    
+    private var activeHotspots: [SceneHotspot] {
+        hotspots
+    }
+    
+    private var activeOverlayObjects: [SceneOverlayObject] {
+        []
+    }
     
     
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            
-            // Background image and clickable hotspot system.
             ImageSceneView(
-                imageName: "museum_interior",
+                imageName: "museum_interior_base",
                 canvasSize: canvasSize,
-                hotspots: hotspots,
-                
-                // Set this to true while positioning hotspots.
-                // Change to false later for the polished version.
-                showDebugHotspots: true,
-                
+                hotspots: activeHotspots,
+                overlayObjects: activeOverlayObjects,
+                showDebugHotspots: false,
                 onHotspotTapped: handleHotspotTapped
             )
             
-            // Dark gradients make the top and bottom UI easier to read.
             readabilityGradients
             
-            // Top HUD.
             VStack {
                 topBar
                     .padding(.horizontal)
@@ -138,45 +154,43 @@ struct MuseumInteriorView: View {
                     .padding(.bottom, 24)
             }
         }
-        
-        // Inventory sheet.
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium])
         }
-        
-        // Evidence sheet.
-        .sheet(isPresented: $showingEvidence) {
-            EvidenceListView()
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
                 .environmentObject(gameState)
                 .presentationDetents([.medium, .large])
         }
         
-        // Submission / ending sheet.
+        .sheet(isPresented: $showingJournal) {
+            JournalView()
+                .environmentObject(gameState)
+                .presentationDetents([.medium, .large])
+        }
+        
         .sheet(isPresented: $showingSubmission) {
             EndingSubmissionView()
                 .environmentObject(gameState)
         }
-        
-        // Full-screen corkboard close-up.
         .fullScreenCover(isPresented: $showingCorkboardCloseup) {
-            MuseumCorkboardCloseupView()
+            CorkboardFullScreenView()
                 .environmentObject(gameState)
         }
         
-        // Fake camera view for the optional museum photo symbol.
-        .fullScreenCover(item: $activePhotoSymbol) { symbol in
-            FakeCameraView(
-                symbol: symbol,
-                alreadyCaptured: gameState.hasPhotographedSymbol(symbol.id),
-                onCapture: { capturedSymbol in
-                    gameState.photographSymbol(capturedSymbol)
-                }
-            )
+        .fullScreenCover(isPresented: $showingCuratorEnding) {
+            CuratorEndingView()
+                .environmentObject(gameState)
         }
         
-        // General museum alerts.
+        .alert(curatorAlertTitle, isPresented: $showingCuratorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(curatorAlertMessage)
+        }
+        
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK") { }
         } message: {
@@ -184,10 +198,26 @@ struct MuseumInteriorView: View {
         }
     }
     
+    // MARK: - Curator Message
+    private func handleCuratorTapped() {
+        if gameState.hasReturnedFromBigfootLair {
+            showingCuratorEnding = true
+        } else {
+            curatorAlertTitle = "The Museum Curator"
+            curatorAlertMessage = """
+            The curator looks up from her desk.
+
+            “This museum needs the story of the century. Find the missing pieces, follow the history, and answer the question I never could.”
+
+            Who guards the Lost Lemon Mine?
+            """
+            showingCuratorAlert = true
+        }
+    }
+    
     
     // MARK: - Readability Gradients
     
-    /// Adds subtle dark overlays at the top and bottom so buttons remain readable.
     private var readabilityGradients: some View {
         VStack {
             LinearGradient(
@@ -219,29 +249,28 @@ struct MuseumInteriorView: View {
     
     // MARK: - Top Bar
     
-    /// Top navigation bar with title, evidence button, and inventory button.
     private var topBar: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Banff Museum")
+                Text("Banff Park Museum")
                     .font(.title.bold())
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(.white)
                 
-                Text("Curator’s Investigation Room")
+                Text("A Historical Treasure Trove")
                     .font(.subheadline)
-                    .foregroundStyle(Color.white.opacity(0.75))
+                    .foregroundStyle(.white.opacity(0.85))
             }
             
             Spacer()
             
             Button {
-                showingEvidence = true
+                showingJournal = true
             } label: {
-                Label("Evidence", systemImage: "doc.text.magnifyingglass")
+                Label("Journal", systemImage: "book.closed.fill")
                     .font(.caption.bold())
             }
             .buttonStyle(.bordered)
-            .tint(Color.yellow)
+            .tint(.yellow)
             
             Button {
                 showingInventory = true
@@ -250,64 +279,29 @@ struct MuseumInteriorView: View {
                     .font(.caption.bold())
             }
             .buttonStyle(.bordered)
-            .tint(Color.orange)
+            .tint(.orange)
         }
     }
     
     
     // MARK: - Bottom Controls
     
-    /// Bottom controls for major hub actions.
     private var bottomControls: some View {
         VStack(spacing: 12) {
             
-            // Hint telling the player what to do.
-            Text("Tap the corkboard to choose your next lead.")
-                .font(.headline)
-                .foregroundStyle(Color.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Color.black.opacity(0.55))
-                .clipShape(Capsule())
-            
             HStack(spacing: 12) {
-                
-                // Opens the corkboard close-up.
-                Button {
-                    showingCorkboardCloseup = true
-                } label: {
-                    Label("Corkboard", systemImage: "pin.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                
-                // Opens the final/scavenger hunt submission screen.
-                Button {
-                    showingSubmission = true
-                } label: {
-                    Label("Submit", systemImage: "paperplane.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-            }
-            
-            HStack(spacing: 12) {
-                
-                // Optional museum interior photo symbol.
-                Button {
-                    activePhotoSymbol = .museumInterior
-                } label: {
-                    Label("Photo Symbol", systemImage: "camera.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                
-                // Return outside.
                 Button {
                     gameState.currentLocation = .museumExterior
                 } label: {
                     Label("Outside", systemImage: "door.right.hand.open")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                
+                Button {
+                    showingSubmission = true
+                } label: {
+                    Label("Summary", systemImage: "paperplane.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -318,24 +312,97 @@ struct MuseumInteriorView: View {
     
     // MARK: - Hotspot Handling
     
-    /// Routes tapped hotspots to the correct interaction.
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
-            
         case "corkboard":
             showingCorkboardCloseup = true
             
         case "curator":
-            showCuratorReminder()
+            handleCuratorTapped()
             
-        case "photo_symbol":
-            activePhotoSymbol = .museumInterior
+        case "wild_bill_exhibit":
+            showAlert(
+                title: "Wild Bill Peyto",
+                message: "Bill Peyto, aka 'Wild Bill' was a legendary Banff guide, outfitter, and park warden. His photograph prominently marks the entrance to the town. Peyto Glacier on the Continental Divide and Peyto Lake are named in his honour."
+            )
             
-        case "evidence_table":
-            showingEvidence = true
+        case "logbook":
+            showAlert(
+                title: "Vistor Logbook",
+                message: "Visitors logged their names here; doodles outnumber signatures three to one—art wins."
+            )
             
-        case "submit_results":
-            showingSubmission = true
+        case "rotary_phone":
+            showAlert(
+                title: "Rotary Phone",
+                message: "So outdated it’s charming. Dialing this relic would take a decade."
+            )
+            
+        case "grizzly_display":
+            showAlert(
+                title: "Grizzly Display",
+                message: "The grizzly seems enormous until you remember the curator's question. Maybe not every giant in the Rockies is a bear."
+            )
+            
+        case "porcupine":
+            showAlert(
+                title: "Porcupine",
+                message: "This porcupine looks ready to lecture you—spines up, attitude sharper than its needles."
+            )
+            
+        case "squirrel":
+            showAlert(
+                title: "Squirrel",
+                message: "The squirrel has the expression of someone who has hidden several important things and forgotten where."
+            )
+            
+        case "fireplace":
+            showAlert(
+                title: "Fireplace",
+                message: "Warm light, gentle crackle— like it was built to shelter winter tails and tales."
+            )
+            
+        case "canoe":
+            showAlert(
+                title: "Hanging Canoe",
+                message: "The canoe hangs above the museum floor, a reminder that trails through Banff were never only on land."
+            )
+            
+        case "mountain_goat":
+            showAlert(
+                title: "Mountain Goat",
+                message: "The mountain goat looks perfectly at home on impossible cliffs. Some creatures belong where people struggle to follow."
+            )
+            
+        case "moose_head":
+            showAlert(
+                title: "Moose Head",
+                message: "The moose stares down with calm authority. It has seen many tourists make poor footwear decisions."
+            )
+            
+        case "raccoon_display":
+            showAlert(
+                title: "Raccoon Display",
+                message: "Raccoons never forget a snack. This one’s stuffed, but the mischief still feels alive."
+            )
+            
+        case "mineral_gems_display":
+            showAlert(
+                title: "Mineral Gems",
+                message: "The stones catch the light. Banff's mountains hide beauty, pressure, and old geological secrets."
+            )
+            
+        case "owls":
+            showAlert(
+                title: "Owls",
+                message: "The owls seem to know exactly what you are doing and have chosen not to interfere."
+            )
+            
+        case "coal_mining_display":
+            showAlert(
+                title: "Coal Mining Display",
+                message: "The mining display is a reminder that once people believe there is wealth underground, they rarely leave quietly."
+            )
             
         default:
             break
@@ -343,169 +410,15 @@ struct MuseumInteriorView: View {
     }
     
     
-    // MARK: - Curator Text
+    // MARK: - Alerts
     
-    /// Shows a short curator reminder when the curator is tapped.
-    private func showCuratorReminder() {
-        showAlert(
-            title: "The Museum Curator",
-            message: """
-            “The corkboard has everything we know so far.
-
-            Follow the leads, bring back evidence, and keep an eye out for historical symbols. Those photographs may decide whether the museum survives.”
-            """
-        )
-    }
-    
-    
-    // MARK: - Alert Helper
-    
-    /// Convenience function for showing alerts.
     private func showAlert(title: String, message: String) {
         alertTitle = title
         alertMessage = message
         showingAlert = true
     }
 }
-
-
-// MARK: - Corkboard Close-Up View
-
-/// Full-screen close-up of the museum corkboard.
-///
-/// This view makes the corkboard feel like an interactable object
-/// rather than just a regular menu.
-private struct MuseumCorkboardCloseupView: View {
-    
-    // MARK: - Shared Game State
-    
-    @EnvironmentObject private var gameState: GameState
-    
-    // MARK: - Dismiss
-    
-    @Environment(\.dismiss) private var dismiss
-    
-    
-    // MARK: - Body
-    
-    var body: some View {
-        ZStack {
-            
-            // Warm corkboard-style background.
-            corkboardBackground
-            
-            VStack(spacing: 16) {
-                
-                // Header.
-                header
-                
-                // Main corkboard content.
-                ScrollView {
-                    VStack(spacing: 18) {
-                        
-                        curatorNote
-                        
-                        CorkboardView()
-                            .environmentObject(gameState)
-                            .padding(.horizontal)
-                            .padding(.bottom, 30)
-                    }
-                }
-            }
-        }
-    }
-    
-    
-    // MARK: - Background
-    
-    /// Creates a warm background that feels like a zoomed-in corkboard.
-    private var corkboardBackground: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.30, green: 0.17, blue: 0.08),
-                    Color(red: 0.58, green: 0.36, blue: 0.17),
-                    Color(red: 0.24, green: 0.13, blue: 0.06)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            
-            // Subtle paper/cork texture effect.
-            Rectangle()
-                .fill(Color.black.opacity(0.15))
-                .blendMode(.multiply)
-        }
-        .ignoresSafeArea()
-    }
-    
-    
-    // MARK: - Header
-    
-    /// Top bar for the close-up corkboard screen.
-    private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("The Curator’s Corkboard")
-                    .font(.title.bold())
-                    .foregroundStyle(Color.white)
-                
-                Text("Choose a lead to investigate.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.white.opacity(0.75))
-            }
-            
-            Spacer()
-            
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.white.opacity(0.9))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding()
-        .background(Color.black.opacity(0.28))
-    }
-    
-    
-    // MARK: - Curator Note
-    
-    /// Intro note shown above the corkboard cards.
-    private var curatorNote: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "note.text")
-                    .foregroundStyle(Color.red)
-                
-                Text("Curator’s Note")
-                    .font(.headline)
-                    .foregroundStyle(Color.black)
-                
-                Spacer()
-            }
-            
-            Text("""
-            Three early leads are pinned here first. Complete them, recover the submerged clue, and new locations will become available.
-
-            Optional photo symbols are hidden throughout Banff. They are not required for the story, but they affect the museum’s ending and the discount rewards.
-            """)
-            .font(.subheadline)
-            .foregroundStyle(Color.black.opacity(0.82))
-        }
-        .padding()
-        .background(
-            Color(red: 0.96, green: 0.86, blue: 0.62)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.35), radius: 8, x: 0, y: 5)
-        .padding(.horizontal)
-        .padding(.top, 8)
-    }
-}
-
+  
 
 // MARK: - Preview
 
