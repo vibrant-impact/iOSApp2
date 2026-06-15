@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "hotel_luggage_tag_gone_overlay.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "hotel_luggage_tag_gone_overlay 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "hotel_luggage_tag_gone_overlay 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

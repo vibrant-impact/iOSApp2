@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "zoom_tunnel_mountain_cave_entrance.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "zoom_tunnel_mountain_cave_entrance 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "zoom_tunnel_mountain_cave_entrance 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

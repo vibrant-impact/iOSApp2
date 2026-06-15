@@ -1,18 +1,18 @@
 //
-//  CorkboardView.swift
+//  ObservatoryView.swift
 //  iOSApp2
 //
-//  Created by stephanie otteson on 2026-06-14.
+//  Created by stephanie otteson on 2026-06-12.
 //
 
 import SwiftUI
 
-struct CorkboardView: View {
+struct ObservatoryView: View {
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
     }
 }
 
 #Preview {
-    CorkboardView()
+    ObservatoryView()
 }

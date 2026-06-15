@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "museum_mailbox_open_overlay.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "museum_mailbox_open_overlay 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "museum_mailbox_open_overlay 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
