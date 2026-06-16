@@ -77,7 +77,7 @@ struct SulphurMountainView: View {
             SnowfallOverlay()
             
             TopHUDView(
-                locationTitle: "Sulphur Mountain Summit",
+                locationTitle: "Sulphur Mountain",
                 locationSubtitle: "A view from above the pattern",
                 onBagTapped: {
                     showingInventory = true

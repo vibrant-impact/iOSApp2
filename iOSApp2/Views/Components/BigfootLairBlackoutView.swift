@@ -51,12 +51,12 @@ struct BigfootLairBlackoutView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                withAnimation(.easeInOut(duration: 0.8)) {
+                withAnimation(.easeInOut(duration: 1.8)) {
                     finalMessageOpacity = 1.0
                 }
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 6.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 7.2) {
                 onFinished()
             }
         }

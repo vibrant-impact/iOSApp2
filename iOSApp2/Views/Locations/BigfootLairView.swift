@@ -20,6 +20,11 @@ struct BigfootLairView: View {
     @State private var showingBigfootCamera = false
     @State private var showingFinalBlackout = false
     
+    @State private var wakeUpBlur: CGFloat = 18
+    @State private var wakeUpBlackOpacity = 1.0
+    @State private var wakeUpTextOpacity = 0.0
+    @State private var isShowingWakeUpSequence = true
+    
     private let canvasSize = CGSize(width: 1290, height: 2796)
     
     private let hotspots: [SceneHotspot] = [
@@ -46,6 +51,26 @@ struct BigfootLairView: View {
     ]
     
     var body: some View {
+        ZStack {
+            lairContent
+                .blur(radius: wakeUpBlur)
+            
+            if isShowingWakeUpSequence {
+                wakeUpFromBlackOverlay
+            }
+        }
+        .onAppear {
+            runWakeUpSequence()
+        }
+        .fullScreenCover(isPresented: $showingBigfootCamera) {
+            BigfootEvidenceCameraView {
+                gameState.hasTakenBigfootEvidencePhoto = true
+                checkForLairCompletion()
+            }
+        }
+    }
+    
+    private var lairContent: some View {
         ZStack {
             ImageSceneView(
                 imageName: "bigfoot_lair_base",
@@ -106,6 +131,62 @@ struct BigfootLairView: View {
             Spacer()
         }
     }
+    
+    private var wakeUpFromBlackOverlay: some View {
+        ZStack {
+            Color.black
+                .opacity(wakeUpBlackOpacity)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 12) {
+                Text("Your eyes open slowly.")
+                Text("Stone. Cold air. A distant drip of water.")
+                Text("You are not on Tunnel Mountain anymore.")
+            }
+            .font(.headline)
+            .foregroundStyle(.white.opacity(0.92))
+            .multilineTextAlignment(.center)
+            .padding()
+            .opacity(wakeUpTextOpacity)
+        }
+        .allowsHitTesting(true)
+    }
+    
+    private func runWakeUpSequence() {
+        guard isShowingWakeUpSequence else {
+            return
+        }
+        
+        wakeUpBlur = 18
+        wakeUpBlackOpacity = 1.0
+        wakeUpTextOpacity = 0.0
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation(.easeInOut(duration: 0.9)) {
+                wakeUpTextOpacity = 1.0
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            withAnimation(.easeInOut(duration: 2.2)) {
+                wakeUpBlackOpacity = 0.35
+                wakeUpBlur = 8
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.8) {
+            withAnimation(.easeInOut(duration: 1.8)) {
+                wakeUpBlackOpacity = 0.0
+                wakeUpBlur = 0
+                wakeUpTextOpacity = 0.0
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.8) {
+            isShowingWakeUpSequence = false
+        }
+    }
+    
     
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
@@ -193,15 +274,12 @@ struct BigfootLairView: View {
                 title: "The Lost Lemon Mine",
                 imageName: "zoom_lair_lost_lemon_mine",
                 description: """
-                Beyond the cavern wall, a narrow mine opening disappears into darkness.
+                Beyond the cavern wall, a mine opening glitters with an unmistakable shine.
 
-                Weathered boards. Rusted tools. A faded mark burned into an old support beam:
+                I can't believe my eyes! Am I dreaming? A faded mark is scratched onto the entrance rocks:
 
-                LEMON.
+                LEMON
 
-                The legend was real.
-
-                But this place is not yours to disturb.
                 """,
                 primaryButtonTitle: "Close",
                 onPrimaryAction: {

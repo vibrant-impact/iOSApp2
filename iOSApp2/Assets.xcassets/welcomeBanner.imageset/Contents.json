@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "zoom_lair_lost_lemon_mine.png",
+      "filename" : "welcomeBanner.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "zoom_lair_lost_lemon_mine 1.png",
+      "filename" : "welcomeBanner 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "zoom_lair_lost_lemon_mine 2.png",
+      "filename" : "welcomeBanner 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

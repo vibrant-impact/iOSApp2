@@ -34,10 +34,12 @@ struct WelcomeView: View {
             Color.black.opacity(0.28)
                 .ignoresSafeArea()
             
-            VStack(spacing: 24) {
+            VStack(spacing: 22) {
                 Spacer()
                 
                 titleSection
+                
+                banner
                 
                 storyCard
                 
@@ -51,6 +53,7 @@ struct WelcomeView: View {
         }
         .sheet(isPresented: $showingHowToPlay) {
             HowToPlayView()
+                .background(Color(red: 6 / 255, green: 24 / 255, blue: 51 / 255))
         }
     }
     
@@ -62,9 +65,9 @@ struct WelcomeView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color(red: 0.03, green: 0.06, blue: 0.10),
-                    Color(red: 0.10, green: 0.08, blue: 0.05),
-                    Color(red: 0.22, green: 0.14, blue: 0.07)
+                    Color(red: 6 / 255, green: 24 / 255, blue: 51 / 255),
+                    Color(red: 159/255, green: 188/255, blue: 229/255),
+                    Color(red: 20/255, green: 82/255, blue: 128/255)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -87,9 +90,9 @@ struct WelcomeView: View {
             // Decorative mountain/moon icon area.
             VStack {
                 Image(systemName: "mountain.2.fill")
-                    .font(.system(size: 120))
-                    .foregroundStyle(Color.white.opacity(0.10))
-                    .padding(.top, 70)
+                    .font(.system(size: 150))
+                    .foregroundStyle(Color.white.opacity(0.20))
+                    .padding(.top, -10)
                 
                 Spacer()
             }
@@ -101,11 +104,8 @@ struct WelcomeView: View {
     
     /// Main title and subtitle.
     private var titleSection: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "building.columns.fill")
-                .font(.system(size: 58))
-                .foregroundStyle(Color.yellow)
-                .shadow(radius: 8)
+        VStack(spacing: 9) {
+            Spacer()
             
             Text("The Curator’s")
                 .font(.title2.bold())
@@ -117,19 +117,29 @@ struct WelcomeView: View {
                 .multilineTextAlignment(.center)
                 .shadow(color: Color.black.opacity(0.65), radius: 8, x: 0, y: 4)
             
-            Text("A story-driven scavenger hunt through Banff history")
+            Text("A story-driven scavenger hunt through Banff")
                 .font(.subheadline.bold())
                 .foregroundStyle(Color.white.opacity(0.78))
                 .multilineTextAlignment(.center)
         }
     }
     
-    
+    private var banner: some View {
+      
+        Image("welcomeBanner")
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity) // Forces it to take up the full available width
+            .clipShape(.rect(cornerRadius: 22))
+            .overlay(
+                    RoundedRectangle(cornerRadius: 22)
+                        .stroke(Color.blue, lineWidth: 1) )
+    }
     // MARK: - Story Card
     
     /// Short story setup for the player.
     private var storyCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 11) {
             HStack {
                 Image(systemName: "quote.opening")
                     .foregroundStyle(Color.yellow)
@@ -142,9 +152,7 @@ struct WelcomeView: View {
             }
             
             Text("""
-            The museum is running out of time.
-
-            Follow the curator’s leads, gather story leads across Banff, and photograph its history before the museum’s story disappears for good.
+            Research key historical sites across Banff, and photograph its history before the museum’s story disappears for good.
             """)
             .font(.body)
             .foregroundStyle(Color.white.opacity(0.86))
@@ -164,25 +172,33 @@ struct WelcomeView: View {
     
     /// Small feature cards explaining the core gameplay.
     private var featureCards: some View {
-        VStack(spacing: 10) {
-            WelcomeFeatureRow(
-                icon: "map.fill",
-                title: "Follow the Leads",
-                subtitle: "Use the corkboard to investigate Banff locations."
-            )
+        HStack(spacing: 6) {
             
             WelcomeFeatureRow(
+                icon: "map.fill",
+                titleTop: "Gather",
+                titleBottom: "Research",
+                subtitle: "Use the corkboard to investigate locations."
+            )
+           
+            WelcomeFeatureRow(
                 icon: "magnifyingglass",
-                title: "Collect Inventory Items",
-                subtitle: "Find historical points of interest, tools, and story leads."
+                titleTop: "Collect",
+                titleBottom: "Items",
+                subtitle: "Find useful tools and story leads."
             )
             
             WelcomeFeatureRow(
                 icon: "camera.fill",
-                title: "Photos",
-                subtitle: "Optional photos unlock discounts, endings, and the grand prize clue."
+                titleTop: "Take",
+                titleBottom: "Photos",
+                subtitle: "Snap photos to unlock discount codes."
             )
+            
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .fixedSize(horizontal: false, vertical: true)
+        
     }
     
     
@@ -190,7 +206,7 @@ struct WelcomeView: View {
     
     /// Main welcome screen buttons.
     private var actionButtons: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 11) {
             
             Button {
                 startGame()
@@ -213,7 +229,7 @@ struct WelcomeView: View {
             .buttonStyle(.bordered)
             .tint(Color.white)
             
-            Text("Banff Museum Historical Scavenger Hunt")
+            Text("Banff Park Museum Historical Scavenger Hunt")
                 .font(.caption)
                 .foregroundStyle(Color.white.opacity(0.55))
                 .padding(.top, 4)
@@ -237,24 +253,32 @@ struct WelcomeView: View {
 private struct WelcomeFeatureRow: View {
     
     let icon: String
-    let title: String
+    let titleTop: String
+    let titleBottom: String
     let subtitle: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 11) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundStyle(Color.yellow)
                 .frame(width: 34)
             
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
+                Text(titleTop)
                     .font(.subheadline.bold())
                     .foregroundStyle(Color.white)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(Color.white.opacity(0.72))
+                Text(titleBottom)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color.white)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                
             }
             
             Spacer()
@@ -276,12 +300,13 @@ private struct HowToPlayView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                
                 VStack(alignment: .leading, spacing: 18) {
                     
                     instructionSection(
                         icon: "pin.fill",
                         title: "1. Use the Corkboard",
-                        text: "Inside the museum, tap the corkboard to choose story leads. Some locations unlock only after earlier locations are explored."
+                        text: "Inside the museum, tap the corkboard to choose story leads and visit Banff locations."
                     )
                     
                     instructionSection(
@@ -293,7 +318,7 @@ private struct HowToPlayView: View {
                     instructionSection(
                         icon: "camera.fill",
                         title: "3. Photograph Banff's History",
-                        text: "Each location has an optional photo. These are not required for the main story, but they affect the discount rewards and endings."
+                        text: "Many locations have photos. Find and take these photos to reveal puzzle clues and unlock discount rewards and endings."
                     )
                     
                     instructionSection(
@@ -305,7 +330,7 @@ private struct HowToPlayView: View {
                     instructionSection(
                         icon: "gift.fill",
                         title: "5. Submit Your Results",
-                        text: "At the end, submit your results. Photographing 5 to 6 photos unlocks a 10% discount. Photographing 7 or 8 unlocks a 20% discount. All 9 plus the curator’s puzzle solution unlocks the grand prize entry."
+                        text: "At the end, submit your results. Photographing 5 to 6 photos unlocks a 10% discount. Photographing 7 to 9 unlocks a 20% discount. All 9 plus the curator’s puzzle solution unlocks the grand prize entry."
                     )
                 }
                 .padding()
@@ -337,6 +362,7 @@ private struct HowToPlayView: View {
                     .font(.body)
                     .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity)
         }
         .padding()
         .background(.thinMaterial)
