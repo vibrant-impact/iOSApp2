@@ -41,12 +41,14 @@ struct HotspotZoomOverlay: View {
                     .multilineTextAlignment(.center)
                 
                 Button(primaryButtonTitle) {
+                    SoundManager.shared.play(.tap, volume: 0.45)
                     onPrimaryAction()
                 }
                 .buttonStyle(.borderedProminent)
                 
                 if shouldShowSecondaryCloseButton {
                     Button {
+                        SoundManager.shared.play(.close, volume: 0.45)
                         onClose()
                     } label: {
                         Text("Close")

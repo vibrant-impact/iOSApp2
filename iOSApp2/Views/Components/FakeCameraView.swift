@@ -132,6 +132,7 @@ struct FakeCameraView: View {
                 
                 // Closes the camera without taking a photo.
                 Button {
+                    SoundManager.shared.play(.close, volume: 0.45)
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -171,6 +172,8 @@ struct FakeCameraView: View {
             
             /// Fake camera shutter button.
             Button {
+                SoundManager.shared.play(.cameraShutter, volume: 0.9)
+                HapticsManager.shared.lightTap()
                 takePhoto()
             } label: {
                 ZStack {
@@ -231,6 +234,7 @@ struct FakeCameraView: View {
                 HStack {
                 
                     Button {
+                        SoundManager.shared.play(.close, volume: 0.45)
                         dismiss()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
@@ -317,6 +321,8 @@ struct FakeCameraView: View {
         
         // Instantly show the flash.
         flashOpacity = 1.0
+        
+        SoundManager.shared.play(.cameraFlash, volume: 0.45)
         
         // Fade the flash away.
         withAnimation(.easeOut(duration: 0.45)) {

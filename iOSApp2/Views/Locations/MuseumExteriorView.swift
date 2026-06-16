@@ -155,6 +155,8 @@ struct MuseumExteriorView: View {
             CombinationLockView(
                 correctCode: "1903",
                 onUnlock: {
+                    SoundManager.shared.play(.doorUnlock)
+                    
                     gameState.isMuseumDoorUnlocked = true
                     showingDoorLock = false
                     

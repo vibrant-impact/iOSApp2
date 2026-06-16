@@ -81,6 +81,7 @@ struct CombinationLockView: View {
                 
                 // Closes the lock view without changing game progress.
                 Button {
+                    SoundManager.shared.play(.close, volume: 0.45)
                     dismiss()
                 } label: {
                     Text("Back")

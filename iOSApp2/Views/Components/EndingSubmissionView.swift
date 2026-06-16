@@ -60,6 +60,7 @@ struct EndingSubmissionView: View {
                     
                     // Closes the submission screen and returns to the game.
                     Button {
+                        SoundManager.shared.play(.close, volume: 0.45)
                         dismiss()
                     } label: {
                         Text("Return to Game")

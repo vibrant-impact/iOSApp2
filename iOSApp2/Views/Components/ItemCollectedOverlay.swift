@@ -40,6 +40,7 @@ struct ItemCollectedOverlay: View {
                     .multilineTextAlignment(.center)
                 
                 Button {
+                    SoundManager.shared.play(.tap, volume: 0.5)
                     onDismiss()
                 } label: {
                     Text("Add to Bag")
@@ -51,6 +52,9 @@ struct ItemCollectedOverlay: View {
             .background(Color.black.opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 26))
             .padding(.horizontal, 32)
+        }
+        .onAppear {
+            SoundManager.shared.play(.itemCollect, volume: 0.85)
         }
     }
 }

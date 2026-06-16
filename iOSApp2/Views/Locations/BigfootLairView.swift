@@ -157,6 +157,8 @@ struct BigfootLairView: View {
             return
         }
         
+        SoundManager.shared.play(.lairWakeup, volume: 0.55)
+        
         wakeUpBlur = 18
         wakeUpBlackOpacity = 1.0
         wakeUpTextOpacity = 0.0

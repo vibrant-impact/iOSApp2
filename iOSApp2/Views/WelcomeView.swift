@@ -339,6 +339,7 @@ private struct HowToPlayView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        SoundManager.shared.play(.close, volume: 0.45)
                         dismiss()
                     }
                 }

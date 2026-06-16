@@ -106,6 +106,7 @@ struct CuratorEndingView: View {
             }
             
             Button {
+                SoundManager.shared.play(.close, volume: 0.45)
                 dismiss()
             } label: {
                 Text("Return to Museum")
@@ -141,6 +142,7 @@ struct CuratorEndingView: View {
             .padding(.horizontal)
             
             Button {
+                SoundManager.shared.play(.close, volume: 0.45)
                 dismiss()
             } label: {
                 Text("Keep Exploring")
@@ -153,6 +155,9 @@ struct CuratorEndingView: View {
     
     private func submitAnswer() {
         if gameState.isCuratorAnswerCorrect(answer) {
+            SoundManager.shared.play(.curatorSuccess, volume: 0.9)
+            HapticsManager.shared.success()
+            
             resultMessage = """
             “Sasquatch,” the curator whispers.
 
@@ -163,6 +168,8 @@ struct CuratorEndingView: View {
             Something better: a legend people will come looking for.
             """
         } else {
+            SoundManager.shared.play(.curatorWrong, volume: 0.65)
+            
             resultMessage = """
             The curator studies the answer, then slowly shakes her head.
 

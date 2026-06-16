@@ -22,6 +22,7 @@ struct LockDial: View {
             
             // Moves the dial upward.
             Button {
+                SoundManager.shared.play(.click)
                 onIncrement()
             } label: {
                 Image(systemName: "chevron.up")
@@ -52,6 +53,7 @@ struct LockDial: View {
             
             // Moves the dial downward.
             Button {
+                SoundManager.shared.play(.click)
                 onDecrement()
             } label: {
                 Image(systemName: "chevron.down")

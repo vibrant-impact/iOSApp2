@@ -45,6 +45,7 @@ struct BigfootEvidenceCameraView: View {
         VStack(spacing: 24) {
             HStack {
                 Button {
+                    SoundManager.shared.play(.close, volume: 0.45)
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -155,6 +156,7 @@ struct BigfootEvidenceCameraView: View {
             
             Button {
                 onCapture()
+                SoundManager.shared.play(.close, volume: 0.45)
                 dismiss()
             } label: {
                 Text("Lower Camera")

@@ -89,6 +89,10 @@ struct IcicleFallSequenceView: View {
     
     private func runSequence(screenHeight: CGFloat) {
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                SoundManager.shared.play(.iceCrack, volume: 0.9)
+            }
+        
         // Beat 1: pause so the player sees the cave.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -107,6 +111,9 @@ struct IcicleFallSequenceView: View {
         
         // Beat 3: impact flash.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.63) {
+            SoundManager.shared.play(.icicleCrash, volume: 1.0)
+            HapticsManager.shared.heavyImpact()
+            
             withAnimation(.linear(duration: 0.04)) {
                 impactFlashOpacity = 1.0
                 sceneScale = 1.06
@@ -114,6 +121,8 @@ struct IcicleFallSequenceView: View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.78) {
+            SoundManager.shared.play(.blackoutRumble, volume: 0.65)
+            
             withAnimation(.easeOut(duration: 0.38)) {
                 impactFlashOpacity = 0.0
             }

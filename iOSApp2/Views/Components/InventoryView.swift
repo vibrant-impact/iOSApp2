@@ -19,6 +19,7 @@ struct InventoryView: View {
             HStack {
             
                 Button {
+                    SoundManager.shared.play(.close, volume: 0.45)
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
