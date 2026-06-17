@@ -4,11 +4,11 @@
 
 An interactive iOS scavenger hunt game built with SwiftUI.
 
-Players explore Banff-inspired locations, follow clues from the museum curator, collect evidence, photograph hidden historical symbols, and work toward saving the museum exhibit.
+Players explore Banff-inspired locations, collect leads, photograph hidden historical sites and clues, and work toward solving the final puzzle to save the museum.
 
 ## Project Overview
 
-This project is a story-driven mobile game prototype. The player begins at the Banff Park Museum, unlocks the museum door, investigates leads from the curator’s corkboard, and collects evidence across multiple Banff locations.
+This project is a story-driven mobile game prototype. The player begins at the Banff Park Museum, unlocks the museum door, investigates locations from the curator’s corkboard, and collects journal entries across multiple Banff locations.
 
 The game includes:
 
@@ -18,9 +18,9 @@ The game includes:
 - A clickable corkboard
 - Location-based investigation scenes
 - Inventory items
-- Evidence collection
-- Optional photo scavenger hunt symbols
-- Multiple endings based on player progress
+- Lead collection
+- Photo scavenger hunt with puzzle clues
+- Final anagram puzzle 
 
 ## Built With
 
@@ -35,9 +35,9 @@ The game includes:
 
 The museum interior acts as the main information hub. Players can tap the corkboard to choose investigation leads.
 
-### Evidence System
+### Story Lead System
 
-Players collect story evidence by tapping scene hotspots and using inventory items.
+Players collect story leads by tapping scene hotspots and using inventory items.
 
 ### Inventory System
 
@@ -45,11 +45,11 @@ Some clues require tools or collected objects before they can be solved.
 
 ### Photo Scavenger Hunt
 
-Optional hidden photo symbols are placed throughout the game. These affect rewards and endings.
+Hidden photos with puzzle clues are placed throughout the game. These are required for the final puzzle.
 
-### Ending System
+### Reward System
 
-The ending changes depending on how many historical symbols the player photographs and whether they solve the curator name puzzle.
+Player unlocks discount codes and a grand prize draw entry based on how many historical photos the player takes and whether they solve the final curator puzzle.
 
 ## Current Status
 
@@ -62,17 +62,15 @@ Completed so far:
 - Museum exterior
 - Door code puzzle
 - Museum interior background and hotspot system
-- Corkboard close-up
+- Corkboard view
 - Cave and Basin investigation scene
 - Evidence and inventory tracking
-- Optional photo system
+- Photo system
 
 Planned updates:
 
 - Add screenshots or GIFs
-- Polish remaining location backgrounds
-- Improve final submission screen
-- Add more animations and sound effects
+- Polish sound effects
 
 ## How to Run
 
