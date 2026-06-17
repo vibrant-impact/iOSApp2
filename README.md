@@ -2,7 +2,7 @@
 
 An atmospheric SwiftUI adventure game set in Banff, Alberta, where players explore historic locations, collect clues, photograph landmarks, solve puzzles, and uncover the mystery of Bigfoot and the Lost Lemon Mine.
 
-![Discover Banff Application Preview](discoverBanff.gif)
+<img src="discoverBanff.gif" style="width: 30%; height: auto;" alt="Discover Banff Application Preview">
 
 ## Overview
 
