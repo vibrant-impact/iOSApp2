@@ -1,84 +1,223 @@
-# iOSApp2
+# Discover Banff: Legends and Lore
 
-## The Curator’s Banff Mystery
+An atmospheric SwiftUI adventure game set in Banff, Alberta, where players explore historic locations, collect clues, photograph landmarks, solve puzzles, and uncover the mystery of Bigfoot and the Lost Lemon Mine.
 
-An interactive iOS scavenger hunt game built with SwiftUI.
+---
 
-Players explore Banff-inspired locations, collect leads, photograph hidden historical sites and clues, and work toward solving the final puzzle to save the museum.
+## Overview
 
-## Project Overview
+**Discover Banff: Legends and Lore** is an interactive story-driven iOS game built with **SwiftUI**. Players begin outside the Banff Park Museum and gradually unlock new locations across Banff by collecting items, reading notes, solving environmental puzzles, and completing a historical photo journal.
 
-This project is a story-driven mobile game prototype. The player begins at the Banff Park Museum, unlocks the museum door, investigates locations from the curator’s corkboard, and collects journal entries across multiple Banff locations.
+The game blends:
 
-The game includes:
+- point-and-click exploration
+- inventory-based puzzles
+- historical photo collection
+- location travel through a museum corkboard
+- atmospheric ambience and sound effects
+- a final curator puzzle
+- a folklore-inspired ending involving Bigfoot and the Lost Lemon Mine
 
-- A welcome screen
-- A museum exterior puzzle
-- A museum interior hub
-- A clickable corkboard
-- Location-based investigation scenes
-- Inventory items
-- Lead collection
-- Photo scavenger hunt with puzzle clues
-- Final anagram puzzle 
+The experience is designed to feel like a cozy mystery, part travel adventure, part local legend, and part escape room.
 
-## Built With
+---
 
-- Swift
-- SwiftUI
-- Xcode
-- iOS
+## Story
 
-## Main Gameplay Features
+The Banff Park Museum is in trouble.
 
-### Museum Hub
+Public interest is fading, the curator is desperate, and only one mystery might save it:
 
-The museum interior acts as the main information hub. Players can tap the corkboard to choose investigation leads.
+> **Who guards the Lost Lemon Mine?**
 
-### Story Lead System
+Armed with a camera, a journal, and a growing bag of unusual tools, players travel across Banff to gather proof, follow historical leads, and piece together a legend no one was supposed to find.
 
-Players collect story leads by tapping scene hotspots and using inventory items.
+But deep beneath Tunnel Mountain, the story becomes stranger than expected.
+
+Was it a dream?
+
+Or did something follow you back?
+
+---
+
+## Features
+
+### Exploration-Based Gameplay
+
+Players interact with illustrated scenes using tappable hotspots. Each location includes objects to inspect, collect, unlock, or photograph.
+
+Locations include:
+
+- Banff Park Museum Exterior
+- Banff Park Museum Interior
+- Bow Falls
+- Cave and Basin
+- Banff Springs Hotel
+- Downtown Banff
+- Upper Hot Springs
+- Sulphur Mountain
+- Sulphur Mountain Observatory
+- Lake Minnewanka
+- Tunnel Mountain
+- Bigfoot’s Lair
+
+---
 
 ### Inventory System
 
-Some clues require tools or collected objects before they can be solved.
+Players collect useful items and use them to unlock new areas or solve puzzles.
 
-### Photo Scavenger Hunt
+Example inventory items include:
 
-Hidden photos with puzzle clues are placed throughout the game. These are required for the final puzzle.
+- Small Shovel
+- Gaff Hook
+- Wooden Matches
+- Vintage Brass Token
+- Observatory Locker Key
+- Rusty Crowbar
+- Woodcutter’s Axe
+- Lost Lemon Gold Nugget
 
-### Reward System
+Inventory items are tracked through a central `GameState` object and displayed in the player’s bag.
 
-Player unlocks discount codes and a grand prize draw entry based on how many historical photos the player takes and whether they solve the final curator puzzle.
+---
 
-## Current Status
+### Historical Photo Journal
 
-This project is currently in development.
+Players use an in-game camera to photograph important locations and moments. Each photo contributes to the journal and reveals a secret letter for the final puzzle.
 
-Completed so far:
+The photo journal encourages players to fully explore Banff before returning to the curator.
 
-- Welcome screen
-- How to Play screen
-- Museum exterior
-- Door code puzzle
-- Museum interior background and hotspot system
-- Corkboard view
-- Cave and Basin investigation scene
-- Evidence and inventory tracking
-- Photo system
+---
 
-Planned updates:
+### Corkboard Travel System
 
-- Add screenshots or GIFs
-- Polish sound effects
+The museum corkboard acts as a travel hub. As the player discovers leads and collects important items, new Banff locations become available.
 
-## How to Run
+Some locations unlock immediately, while others require specific tools or story progression.
 
-1. Clone this repository.
-2. Open the project in Xcode.
-3. Select an iPhone simulator.
-4. Press Run.
+---
 
-## Notes
+### Environmental Puzzles
 
-This app was created as a student SwiftUI project and interactive historical scavenger hunt prototype.
+The game includes a variety of simple adventure-game puzzle interactions, such as:
+
+- opening locked containers
+- melting frozen doors
+- breaking boarded cave entrances
+- using collected tools
+- solving a museum door combination lock
+- triggering story events through exploration
+
+---
+
+### Bigfoot Lair Sequence
+
+After entering Tunnel Mountain, players experience a more cinematic sequence involving:
+
+- a blackout
+- waking up in Bigfoot’s lair
+- discovering the Lost Lemon Mine
+- meeting the Bigfoot family
+- escaping back to the museum exterior
+
+The return to the museum includes an eyes-opening effect, a dreamlike story prompt, and a gold nugget reveal.
+
+---
+
+### Final Curator Puzzle
+
+Once all required photos are collected, the curator asks the final question:
+
+> **Who guards the Lost Lemon Mine?**
+
+Players arrange discovered letter scraps to form the answer. The puzzle uses tappable image scraps rather than a keyboard text field for a more tactile storybook feel.
+
+---
+
+### Sound and Ambience
+
+The game includes:
+
+- looping ambience by location
+- tap/click feedback
+- item collection sounds
+- camera sounds
+- puzzle feedback
+- magical location travel sounds
+- special reveal sounds
+
+Ambience is managed through a reusable `SoundManager` using `AVAudioPlayer`.
+
+---
+
+## Built With
+
+- **Swift**
+- **SwiftUI**
+- **AVFoundation**
+- **Combine**
+- **Xcode**
+- **iOS**
+
+---
+
+## Project Structure
+
+```text
+iOSApp2/
+├── App/
+│   └── iOSApp2App.swift
+│
+├── State/
+│   └── GameState.swift
+│
+├── Models/
+│   ├── InventoryItem.swift
+│   ├── Location.swift
+│   ├── LocationLead.swift
+│   ├── Photo.swift
+│   ├── SceneHotspot.swift
+│   └── SceneOverlayObject.swift
+│
+├── Managers/
+│   ├── SoundManager.swift
+│   └── HapticsManager.swift
+│
+├── Sound/
+│   ├── GameSound.swift
+│   └── AmbientSound.swift
+│
+├── Views/
+│   ├── MuseumExteriorView.swift
+│   ├── MuseumInteriorView.swift
+│   ├── BowFallsView.swift
+│   ├── CaveAndBasinView.swift
+│   ├── BanffSpringsHotelView.swift
+│   ├── DowntownBanffView.swift
+│   ├── HotSpringsView.swift
+│   ├── SulphurMountainView.swift
+│   ├── ObservatoryInteriorView.swift
+│   ├── LakeMinnewankaView.swift
+│   ├── TunnelMountainView.swift
+│   ├── BigfootLairView.swift
+│   └── CuratorEndingView.swift
+│
+├── Components/
+│   ├── ImageSceneView.swift
+│   ├── HotspotZoomOverlay.swift
+│   ├── InventoryView.swift
+│   ├── JournalView.swift
+│   ├── FakeCameraView.swift
+│   ├── ItemCollectedOverlay.swift
+│   ├── PocketGoldNuggetOverlay.swift
+│   ├── LetterScrapPuzzleView.swift
+│   ├── CombinationLockView.swift
+│   ├── SnowfallOverlay.swift
+│   └── TopHUDView.swift
+│
+└── Assets/
+    ├── Images
+    ├── Item Icons
+    ├── Letter Scraps
+    └── Audio
