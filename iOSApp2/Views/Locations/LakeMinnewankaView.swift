@@ -179,6 +179,7 @@ struct LakeMinnewankaView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "crate":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = gameState.hasInventoryItem(.rustyCrowbar)
                 ? .crateWithCrowbar
                 : .crateNeedsCrowbar

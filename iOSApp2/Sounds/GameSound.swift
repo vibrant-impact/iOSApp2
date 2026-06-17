@@ -23,6 +23,8 @@ enum GameSound {
     case curatorSuccess
     case curatorWrong
     case click
+    case locationTravel
+    case nuggetReveal
     
     var fileName: String {
         switch self {
@@ -52,6 +54,10 @@ enum GameSound {
             return "blackout_rumble.wav"
         case .lairWakeup:
             return "lair_wakeup.wav"
+        case .locationTravel:
+            return "return.wav"
+        case .nuggetReveal:
+            return "nugget_reveal.wav"
         case .curatorSuccess:
             return "curator_success.wav"
         case .curatorWrong:

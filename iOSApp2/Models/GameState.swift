@@ -23,7 +23,6 @@ final class GameState: ObservableObject {
     @Published var hasCollectedShovel = false
     @Published var isMuseumDoorUnlocked = false
     @Published var hasSeenReturnFromLairMessage = false
-    // @Published var hasPhotographedBigfootFootprint = false
     
     
     // MARK: - Museum Interior
@@ -35,14 +34,12 @@ final class GameState: ObservableObject {
     @Published var hasCollectedGaffHook = false
     @Published var hasOpenedFallsCanister = false
     @Published var hasCollectedWoodenMatches = false
-    // @Published var hasPhotographedDouglasFirForest = false
     
     
     // MARK: - Cave and Basin
     
     @Published var hasOpenedBasinChest = false
     @Published var hasCollectedVintageBrassToken = false
-    // @Published var hasPhotographedVent = false
     
     
     // MARK: - Banff Springs Hotel
@@ -56,19 +53,15 @@ final class GameState: ObservableObject {
     @Published var hasEnteredSnowyOwlCafe = false
     @Published var hasTradedVintageBrassToken = false
     @Published var hasCollectedObservatoryStoryLead = false
-    // @Published var hasPhotographedIceSculptures = false
     
     
     // MARK: - Upper Hot Springs
     
     @Published var hasCollectedObservatoryLockerKey = false
-    // @Published var hasPhotographedMarilynMonroe = false
-    // @Published var hasCollectedCafeLead = false
     
     // MARK: - Sulphur Mountain
     
     @Published var hasMeltedWeatherStationDoorIce = false
-    // @Published var hasPhotographedBanffTown = false
     
     
     // MARK: - Observatory Interior
@@ -83,14 +76,13 @@ final class GameState: ObservableObject {
     
     @Published var hasOpenedMinnewankaCrate = false
     @Published var hasCollectedWoodcuttersAxe = false
-    // @Published var hasPhotographedSunkenTown = false
     
     
     // MARK: - Tunnel Mountain
     
     @Published var hasBrokenCaveEntranceBoards = false
     @Published var hasTriggeredIcicleFall = false
-    // @Published var hasPhotographedSnowyOwl = false
+
     
     
     // MARK: - Bigfoot's Lair
@@ -104,7 +96,7 @@ final class GameState: ObservableObject {
     @Published var hasReturnedFromBigfootLair = false
     @Published var hasFoundGoldNuggetInPocket = false
     @Published var hasSpokenToCuratorAfterLair = false
-    
+    @Published var shouldShowMuseumWakeUpAfterLair = false
     
     
     // MARK: - Inventory
@@ -220,6 +212,7 @@ final class GameState: ObservableObject {
             hasCollectedObservatoryJournalLead = true
         case .lostLemonGoldNugget:
             hasReturnedFromBigfootLair = true
+            hasFoundGoldNuggetInPocket = true
         }
     }
     
@@ -311,10 +304,12 @@ final class GameState: ObservableObject {
     func finishBigfootLairSequence() {
         hasEscapedBigfootLair = true
         hasReturnedFromBigfootLair = true
-        hasFoundGoldNuggetInPocket = true
         
-        collectInventoryItem(.lostLemonGoldNugget)
+        // Do NOT set this here.
+        // The player has not checked their pocket yet.
+        hasFoundGoldNuggetInPocket = false
         
+        shouldShowMuseumWakeUpAfterLair = true
         currentLocation = .museumExterior
     }
     
@@ -411,27 +406,6 @@ final class GameState: ObservableObject {
             .uppercased()
         
         return cleanedAnswer == curatorAnswer
-    }
-    
-    
-    // MARK: - Ending
-    
-    /// Determines the game ending based on photos and final answer.
-    func ending(for answer: String) -> GameEnding {
-        let solvedFinalAnswer = isCuratorAnswerCorrect(answer)
-        
-        if photoCount == totalPhotoCount && solvedFinalAnswer {
-            return .legendaryLegacy
-        }
-        
-        switch photoCount {
-        case 7...9:
-            return .newFunding
-        case 5...6:
-            return .interestReignited
-        default:
-            return .museumLost
-        }
     }
 }
     

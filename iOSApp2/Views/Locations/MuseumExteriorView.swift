@@ -26,6 +26,13 @@ struct MuseumExteriorView: View {
     @State private var activeZoomOverlay: MuseumExteriorZoomOverlay?
     @State private var collectedItemOverlay: InventoryItem?
     
+    @State private var museumWakeBlur: CGFloat = 18
+    @State private var museumWakeBlackOpacity = 0.0
+    @State private var museumWakeTextOpacity = 0.0
+
+    @State private var isShowingMuseumWakeOverlay = false
+    @State private var isShowingHeadHurtsAlert = false
+    @State private var isShowingPocketGoldOverlay = false
     
     // MARK: - Scene Data
     
@@ -114,10 +121,58 @@ struct MuseumExteriorView: View {
         return overlays
     }
     
-    
-    // MARK: - Body
-    
+    // MARK: - museum body
     var body: some View {
+        ZStack {
+            museumExteriorContent
+                .blur(radius: museumWakeBlur)
+            
+            if isShowingMuseumWakeOverlay {
+                museumWakeUpOverlay
+            }
+            
+            if isShowingPocketGoldOverlay {
+                PocketGoldNuggetOverlay {
+                    collectPocketGoldNugget()
+                }
+                .zIndex(20)
+            }
+        }
+        .onAppear {
+            startMuseumExteriorAmbience()
+            runMuseumWakeUpIfNeeded()
+        }
+        .onDisappear {
+            SoundManager.shared.stopAmbience(.snowyExterior)
+        }
+        .alert("Your head aches.", isPresented: $isShowingHeadHurtsAlert) {
+            Button("Check Pocket") {
+                SoundManager.shared.play(.paperNote, volume: 0.45)
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isShowingPocketGoldOverlay = true
+                    }
+                }
+            }
+            
+            Button("Keep Exploring", role: .cancel) {
+                SoundManager.shared.play(.close, volume: 0.45)
+            }
+        } message: {
+            Text("""
+            Cold stone. Falling ice. A shadow in the dark.
+
+            Was it a dream?
+
+            You swear you saw Bigfoot… and the Lost Lemon Mine.
+            """)
+        }
+    }
+    
+    // MARK: - museum
+    
+    private var museumExteriorContent: some View {
         ZStack {
             ImageSceneView(
                 imageName: "museum_exterior_base",
@@ -132,7 +187,7 @@ struct MuseumExteriorView: View {
             
             TopHUDView(
                 locationTitle: "Discover Banff",
-                locationSubtitle: "The Lost Lemon Mine",
+                locationSubtitle: "Legends and Lore",
                 onBagTapped: {
                     showingInventory = true
                 },
@@ -184,28 +239,6 @@ struct MuseumExteriorView: View {
         } message: {
             Text(simpleAlertMessage)
         }
-        /// if returning from lair
-        .onAppear {
-            if gameState.hasReturnedFromBigfootLair
-                && !gameState.hasSeenReturnFromLairMessage {
-                
-                gameState.hasSeenReturnFromLairMessage = true
-                
-                simpleAlertTitle = "Back at the Museum"
-                simpleAlertMessage = """
-                You wake in the snow outside the museum.
-
-                Your camera is still around your neck.
-
-                Your coat feels heavier than before.
-
-                In your pocket is a small gold nugget.
-                """
-                showingSimpleAlert = true
-            }
-        }
-
-        
         .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
                 photo: photo,
@@ -223,9 +256,11 @@ struct MuseumExteriorView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "mailbox":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = gameState.hasOpenedMailbox ? .mailboxOpen : .mailboxClosed
             
         case "shovel":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = .shovel
             
         case "footprint":
@@ -235,6 +270,7 @@ struct MuseumExteriorView: View {
             activeZoomOverlay = .sign
             
         case "door":
+            SoundManager.shared.play(.tap, volume: 0.35)
             if gameState.isMuseumDoorUnlocked {
                 gameState.currentLocation = .museumInterior
             } else {
@@ -367,6 +403,103 @@ struct MuseumExteriorView: View {
                     activeZoomOverlay = nil
                 }
             )
+        }
+    }
+    
+    // MARK: - Wake up Overlay
+    private var museumWakeUpOverlay: some View {
+        ZStack {
+            Color.black
+                .opacity(museumWakeBlackOpacity)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 12) {
+                Text("Your eyes open slowly.")
+                Text("Snowlight. Cold air. The museum steps.")
+                Text("You are back in Banff.")
+            }
+            .font(.headline)
+            .foregroundStyle(.white.opacity(0.92))
+            .multilineTextAlignment(.center)
+            .padding()
+            .opacity(museumWakeTextOpacity)
+        }
+        .allowsHitTesting(true)
+    }
+    
+    // MARK: - Ambient Sound
+    private func startMuseumExteriorAmbience() {
+        SoundManager.shared.stopAllAmbience()
+        SoundManager.shared.playAmbience(.snowyExterior, volume: 1.0)
+    }
+    
+    // MARK: - Wake up Sequence
+    private func runMuseumWakeUpIfNeeded() {
+        guard gameState.shouldShowMuseumWakeUpAfterLair else {
+            museumWakeBlur = 0
+            museumWakeBlackOpacity = 0
+            museumWakeTextOpacity = 0
+            isShowingMuseumWakeOverlay = false
+            return
+        }
+        
+        gameState.shouldShowMuseumWakeUpAfterLair = false
+        
+        isShowingMuseumWakeOverlay = true
+        museumWakeBlur = 18
+        museumWakeBlackOpacity = 1.0
+        museumWakeTextOpacity = 0.0
+        
+        SoundManager.shared.playAmbience(.snowyExterior, volume: 1.0)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation(.easeInOut(duration: 0.9)) {
+                museumWakeTextOpacity = 1.0
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.45) {
+            withAnimation(.easeInOut(duration: 2.1)) {
+                museumWakeBlackOpacity = 0.25
+                museumWakeBlur = 8
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.55) {
+            withAnimation(.easeInOut(duration: 1.6)) {
+                museumWakeBlackOpacity = 0.0
+                museumWakeBlur = 0
+                museumWakeTextOpacity = 0.0
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.25) {
+            isShowingMuseumWakeOverlay = false
+            
+            guard !gameState.hasFoundGoldNuggetInPocket else {
+                return
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                SoundManager.shared.play(.paperNote, volume: 0.35)
+                isShowingHeadHurtsAlert = true
+            }
+        }
+    }
+    
+    
+    // MARK: - Finding Gold
+    private func collectPocketGoldNugget() {
+        print("Collecting Lost Lemon Gold Nugget")
+        
+        gameState.collectInventoryItem(.lostLemonGoldNugget)
+        
+        withAnimation(.easeInOut(duration: 0.25)) {
+            isShowingPocketGoldOverlay = false
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            collectedItemOverlay = .lostLemonGoldNugget
         }
     }
 }

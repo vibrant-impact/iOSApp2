@@ -145,6 +145,7 @@ struct SulphurMountainView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "observatory_door":
+            SoundManager.shared.play(.tap, volume: 0.35)
             if gameState.hasMeltedWeatherStationDoorIce {
                 gameState.currentLocation = .observatory
             } else if gameState.hasInventoryItem(.woodenMatches) {

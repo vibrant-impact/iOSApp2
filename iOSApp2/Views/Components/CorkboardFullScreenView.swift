@@ -91,43 +91,43 @@ struct CorkboardFullScreenView: View {
             id: "letter_a_museum_exterior",
             imageName: "corkboard_letter_a_1",
             photo: .museumExterior,
-            rect: CGRect(x: 163, y: 1025, width: 121, height: 156)
+            rect: CGRect(x: 128, y: 1025, width: 121, height: 156)
         ),
         CorkboardLetterOverlay(
             id: "letter_s_bow_falls",
             imageName: "corkboard_letter_s_1",
             photo: .bowFalls,
-            rect: CGRect(x: 280, y: 1059, width: 117, height: 152)
+            rect: CGRect(x: 245, y: 1059, width: 117, height: 152)
         ),
         CorkboardLetterOverlay(
             id: "letter_t_cave_and_basin",
             imageName: "corkboard_letter_t",
             photo: .caveAndBasin,
-            rect: CGRect(x: 391, y: 1017, width: 108, height: 146)
+            rect: CGRect(x: 358, y: 1017, width: 108, height: 146)
         ),
         CorkboardLetterOverlay(
             id: "letter_c_banff_springs_hotel",
             imageName: "corkboard_letter_c",
             photo: .banffSpringsHotel,
-            rect: CGRect(x: 495, y: 1045, width: 112, height: 154)
+            rect: CGRect(x: 465, y: 1045, width: 112, height: 154)
         ),
         CorkboardLetterOverlay(
             id: "letter_q_downtown_banff",
             imageName: "corkboard_letter_q",
             photo: .downtownBanff,
-            rect: CGRect(x: 603, y: 1057, width: 124, height: 148)
+            rect: CGRect(x: 576, y: 1057, width: 124, height: 148)
         ),
         CorkboardLetterOverlay(
             id: "letter_h_hot_springs",
             imageName: "corkboard_letter_h",
             photo: .hotSprings,
-            rect: CGRect(x: 681, y: 1013, width: 142, height: 168)
+            rect: CGRect(x: 663, y: 1013, width: 142, height: 168)
         ),
         CorkboardLetterOverlay(
             id: "letter_u_sulphur_mountain",
             imageName: "corkboard_letter_u",
             photo: .sulphurMountain,
-            rect: CGRect(x: 813, y: 1028, width: 139, height: 180)
+            rect: CGRect(x: 794, y: 1028, width: 139, height: 180)
         ),
         CorkboardLetterOverlay(
             id: "letter_s_lake_minnewanka",
@@ -139,7 +139,7 @@ struct CorkboardFullScreenView: View {
             id: "letter_a_tunnel_mountain",
             imageName: "corkboard_letter_a_2",
             photo: .tunnelMountain,
-            rect: CGRect(x: 974, y: 1023, width: 143, height: 175)
+            rect: CGRect(x: 986, y: 1023, width: 143, height: 175)
         )
     ]
     
@@ -218,7 +218,7 @@ struct CorkboardFullScreenView: View {
         guard let marker = locationHotspots.first(where: { $0.id == hotspot.id }) else {
             return
         }
-        
+        SoundManager.shared.play(.locationTravel, volume: 0.75)
         gameState.currentLocation = marker.location
         dismiss()
     }

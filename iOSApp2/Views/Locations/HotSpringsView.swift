@@ -200,9 +200,11 @@ struct HotSpringsView: View {
             activePhoto = Photo.hotSprings
             
         case "keys":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = .keysAvailable
             
         case "map_table":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = .mapTable
             
         case "lodge":

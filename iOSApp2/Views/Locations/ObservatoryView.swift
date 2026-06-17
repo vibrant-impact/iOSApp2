@@ -157,6 +157,7 @@ struct ObservatoryView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "locker":
+            SoundManager.shared.play(.tap, volume: 0.35)
             if gameState.hasInventoryItem(.observatoryLockerKey) {
                 activeZoomOverlay = .lockerWithKey
             } else {
@@ -165,6 +166,7 @@ struct ObservatoryView: View {
             }
             
         case "logbook":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = .logbook
             
         case "old_equipment":

@@ -135,6 +135,15 @@ struct BanffSpringsHotelView: View {
         } message: {
             Text(alertMessage)
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.snowyExterior, volume: 1.0)
+        }
+        .onDisappear {
+            SoundManager.shared.stopAmbience(.snowyExterior)
+        }
+        
         .fullScreenCover(item: $activePhoto) { photo in
             FakeCameraView(
                 photo: photo,

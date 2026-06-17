@@ -122,6 +122,15 @@ struct TunnelMountainView: View {
                 }
             }
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.mountainWind, volume: 1.0)
+        }
+        .onDisappear {
+            SoundManager.shared.stopAmbience(.mountainWind)
+        }
+        
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)
@@ -174,6 +183,7 @@ struct TunnelMountainView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "cave_entrance":
+            SoundManager.shared.play(.tap, volume: 0.35)
             if gameState.hasReturnedFromBigfootLair || gameState.hasEscapedBigfootLair {
                 showAlert(
                     title: "Where Did It Go?",

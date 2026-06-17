@@ -186,9 +186,11 @@ struct BowFallsView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "gaff_hook":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = .gaffHook
             
         case "buried_canister":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = gameState.hasInventoryItem(.smallShovel)
                 ? .buriedCanisterWithShovel
                 : .buriedCanisterNeedsShovel

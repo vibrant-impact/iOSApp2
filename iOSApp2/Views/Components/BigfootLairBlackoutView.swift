@@ -22,6 +22,7 @@ struct BigfootLairBlackoutView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 14) {
+                
                 Text("A low rumble echoes through the cave.")
                     .opacity(messageOpacity)
                 
@@ -40,6 +41,7 @@ struct BigfootLairBlackoutView: View {
             .padding()
         }
         .onAppear {
+            SoundManager.shared.play(.blackoutRumble, volume: 0.65)
             withAnimation(.easeInOut(duration: 1.0)) {
                 opacity = 1.0
             }

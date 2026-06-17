@@ -171,10 +171,6 @@ struct MuseumInteriorView: View {
                 .presentationDetents([.medium, .large])
         }
         
-        .sheet(isPresented: $showingSubmission) {
-            EndingSubmissionView()
-                .environmentObject(gameState)
-        }
         .fullScreenCover(isPresented: $showingCorkboardCloseup) {
             CorkboardFullScreenView()
                 .environmentObject(gameState)
@@ -207,7 +203,7 @@ struct MuseumInteriorView: View {
             curatorAlertMessage = """
             The curator looks up from her desk.
 
-            “This museum needs the story of the century. Find the missing pieces, follow the history, and answer the question I never could.”
+            “Save the museum with the story of the century. Find the missing pieces, follow the history, and answer the question I never could.”
 
             Who guards the Lost Lemon Mine?
             """
@@ -294,14 +290,6 @@ struct MuseumInteriorView: View {
                     gameState.currentLocation = .museumExterior
                 } label: {
                     Label("Outside", systemImage: "door.right.hand.open")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                
-                Button {
-                    showingSubmission = true
-                } label: {
-                    Label("Summary", systemImage: "paperplane.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)

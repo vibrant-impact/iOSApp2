@@ -300,7 +300,7 @@ struct FakeCameraView: View {
                     Text(photo.historicalNote)
                         .foregroundStyle(.white.opacity(0.88))
                     
-                    Text("Find all the clues to answer the curator's question.")
+                    Text("Find all 9 clues to solve the curator's puzzle.")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.6))
                         .padding(.top, 4)

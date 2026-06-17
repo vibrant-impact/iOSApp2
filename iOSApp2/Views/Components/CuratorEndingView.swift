@@ -12,8 +12,7 @@ struct CuratorEndingView: View {
     @EnvironmentObject private var gameState: GameState
     @Environment(\.dismiss) private var dismiss
     
-    @State private var answer = ""
-    @State private var resultMessage: String?
+    @State private var endingPhase: CuratorEndingPhase = .puzzle
     
     private var foundAllPhotos: Bool {
         gameState.photoCount == gameState.totalPhotoCount
@@ -23,9 +22,9 @@ struct CuratorEndingView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color.black,
-                    Color(red: 0.10, green: 0.08, blue: 0.05),
-                    Color.black
+                    Color(red: 6 / 255, green: 24 / 255, blue: 51 / 255),
+                    Color(red: 20/255, green: 82/255, blue: 128/255),
+                    Color(red: 6 / 255, green: 24 / 255, blue: 51 / 255)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -47,7 +46,13 @@ struct CuratorEndingView: View {
                         .padding(.horizontal)
                     
                     if foundAllPhotos {
-                        fullPhotoEnding
+                        switch endingPhase {
+                        case .puzzle:
+                            fullPhotoEnding
+                        case .rewards:
+                            CuratorRewardWrapUpView()
+                                .environmentObject(gameState)
+                        }
                     } else {
                         incompletePhotoEnding
                     }
@@ -68,42 +73,21 @@ struct CuratorEndingView: View {
             .multilineTextAlignment(.center)
             .padding(.horizontal)
             
-            Text(gameState.discoveredCuratorLetters)
-                .font(.system(size: 34, weight: .black, design: .rounded))
-                .tracking(8)
-                .foregroundStyle(.yellow)
-                .padding()
-                .background(Color.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-            
-            Text("Who guards the Lost Lemon Mine?")
-                .font(.headline)
-                .foregroundStyle(.white)
-            
-            TextField("Type your answer", text: $answer)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
-                .padding()
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .padding(.horizontal)
-            
-            Button {
-                submitAnswer()
-            } label: {
-                Text("Submit Answer")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.horizontal)
-            
-            if let resultMessage {
-                Text(resultMessage)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding()
-            }
+            LetterScrapPuzzleView(
+                letters: gameState.discoveredCuratorLetters,
+                solution: "SASQUATCH",
+                onSolved: {
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            endingPhase = .rewards
+                        }
+                    }
+                },
+                onWrongAnswer: {
+             
+                }
+            )
             
             Button {
                 SoundManager.shared.play(.close, volume: 0.45)
@@ -116,6 +100,7 @@ struct CuratorEndingView: View {
             .padding(.horizontal)
         }
     }
+
     
     private var incompletePhotoEnding: some View {
         VStack(spacing: 18) {
@@ -152,31 +137,11 @@ struct CuratorEndingView: View {
             .padding(.horizontal)
         }
     }
-    
-    private func submitAnswer() {
-        if gameState.isCuratorAnswerCorrect(answer) {
-            SoundManager.shared.play(.curatorSuccess, volume: 0.9)
-            HapticsManager.shared.success()
-            
-            resultMessage = """
-            “Sasquatch,” the curator whispers.
+}
 
-            The museum has its story.
-
-            Not proof. Not exactly.
-
-            Something better: a legend people will come looking for.
-            """
-        } else {
-            SoundManager.shared.play(.curatorWrong, volume: 0.65)
-            
-            resultMessage = """
-            The curator studies the answer, then slowly shakes her head.
-
-            “Not quite. Look again at the letters.”
-            """
-        }
-    }
+private enum CuratorEndingPhase {
+    case puzzle
+    case rewards
 }
 
 #Preview {

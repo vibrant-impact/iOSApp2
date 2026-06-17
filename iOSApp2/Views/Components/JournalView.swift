@@ -36,8 +36,10 @@ struct JournalView: View {
            
                 Spacer()
             }
-            .padding()
-                
+            
+            
+            progressCard
+            
             List {
                 if gameState.journalPhotos.isEmpty {
                     emptyJournalView
@@ -48,6 +50,57 @@ struct JournalView: View {
         }
     }
     
+    // MARK: - Progress Card
+    
+    /// Shows the player's photo scavenger hunt progress.
+    private var progressCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Historical photos captured:")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                // Large visual count of collected photos.
+                Text("\(gameState.photoCount) / \(gameState.totalPhotoCount)")
+                    .font(.largeTitle.bold())
+            }
+            
+            Divider()
+            
+            Text("Capture at least 5 photos to unlock bonuses.")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+            
+            Text("Find all 9 and solve the curator's puzzle to")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+            
+            Text("unlock the $5000 grand prize draw entry.")
+                .font(.subheadline.bold())
+                .foregroundStyle(.secondary)
+            
+            Divider()
+            
+            HStack {
+                
+                Text("Discount Code:")
+                    .font(.subheadline.bold())
+                
+                Spacer()
+                
+                // Shows either a reward code or "LOCKED".
+                //
+                // If the reward is still locked, the text is gray.
+                // If a reward code has been earned, the text turns green.
+                Text(gameState.photoRewardCode)
+                    .font(.title3.bold())
+                    .foregroundColor(gameState.photoRewardCode == "LOCKED" ? Color.secondary : Color.green)
+            }
+        }
+        .padding()
+    }
     
     // MARK: - Empty State
     

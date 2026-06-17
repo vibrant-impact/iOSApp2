@@ -39,7 +39,7 @@ struct CaveAndBasinView: View {
         SceneHotspot(
             id: "vent",
             name: "Cave Vent Hole",
-            rect: CGRect(x: 266, y: 246, width: 706, height: 541)
+            rect: CGRect(x: 345, y: 262, width: 588, height: 675)
         ),
         SceneHotspot(
             id: "squirrel",
@@ -177,6 +177,7 @@ struct CaveAndBasinView: View {
     private func handleHotspotTapped(_ hotspot: SceneHotspot) {
         switch hotspot.id {
         case "submerged_chest":
+            SoundManager.shared.play(.tap, volume: 0.35)
             activeZoomOverlay = gameState.hasInventoryItem(.gaffHook)
                 ? .submergedChestWithHook
                 : .submergedChestNeedsHook

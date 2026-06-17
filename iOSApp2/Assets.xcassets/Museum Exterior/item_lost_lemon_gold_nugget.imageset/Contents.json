@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "corkboard_letter_s_1.png",
+      "filename" : "item_lost_lemon_gold_nugget.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "corkboard_letter_s_1 1.png",
+      "filename" : "item_lost_lemon_gold_nugget 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "corkboard_letter_s_1 2.png",
+      "filename" : "item_lost_lemon_gold_nugget 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
