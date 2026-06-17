@@ -221,3 +221,85 @@ iOSApp2/
     ├── Item Icons
     ├── Letter Scraps
     └── Audio
+```
+
+---
+
+## Getting Started
+
+**Requirements**
+
+- macOS
+- Xcode
+- iOS Simulator or physical iPhone
+- SwiftUI-compatible iOS target
+
+Recommended:
+
+- Xcode 15 or newer
+- iOS 17 or newer
+
+**Installation**
+
+Clone the repository:
+
+```text
+git clone https://github.com/vibrant-impact/iOSApp2
+```
+Open the project in Xcode:
+
+```text
+open iOSApp2.xcodeproj
+```
+Then:
+
+1. Select an iPhone simulator or connected device.
+2. Build and run with Command + R.
+3. Start exploring Banff.
+
+---
+
+## Development Notes
+
+This project was built as a highly visual SwiftUI adventure game. Many scenes rely on custom image assets and tappable coordinate-based hotspots.
+
+The hotspot system uses a base canvas size for each scene, allowing hotspot rectangles to scale with the displayed image.
+
+Example:
+
+```text
+private let canvasSize = CGSize(width: 1290, height: 2796)
+
+private let hotspots: [SceneHotspot] = [
+    SceneHotspot(
+        id: "mailbox",
+        name: "Mailbox",
+        rect: CGRect(x: 13, y: 1871, width: 354, height: 245)
+    )
+]
+```
+
+---
+
+## Future Improvements
+
+Possible future additions:
+
+save/load persistence
+accessibility improvements
+larger map interface
+hint system
+animated scene transitions
+more historical facts in the journal
+achievements
+iPad layout polish
+localization
+App Store trailer and screenshots
+
+---
+
+## Credits
+
+Created by Stephanie Otteson.
+
+Built with SwiftUI, late-night debugging, Banff inspiration, and one very suspicious Bigfoot.
