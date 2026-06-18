@@ -218,7 +218,7 @@ struct CorkboardFullScreenView: View {
         guard let marker = locationHotspots.first(where: { $0.id == hotspot.id }) else {
             return
         }
-        SoundManager.shared.play(.locationTravel, volume: 0.75)
+        SoundManager.shared.play(.locationTravel, volume: 0.45)
         gameState.currentLocation = marker.location
         dismiss()
     }

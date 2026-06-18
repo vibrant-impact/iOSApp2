@@ -154,6 +154,16 @@ struct MuseumInteriorView: View {
                     .padding(.bottom, 24)
             }
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.fireplace, volume: 0.5)
+        }
+        
+        .onDisappear {
+            SoundManager.shared.stopAmbience(.fireplace)
+        }
+        
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)

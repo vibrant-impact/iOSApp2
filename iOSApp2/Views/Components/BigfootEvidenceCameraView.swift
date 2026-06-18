@@ -156,7 +156,7 @@ struct BigfootEvidenceCameraView: View {
             
             Button {
                 onCapture()
-                SoundManager.shared.play(.close, volume: 0.45)
+                
                 dismiss()
             } label: {
                 Text("Lower Camera")
@@ -169,6 +169,8 @@ struct BigfootEvidenceCameraView: View {
     
     private func takePhoto() {
         flashOpacity = 1.0
+        
+        SoundManager.shared.play(.cameraFlash, volume: 0.45)
         
         withAnimation(.easeOut(duration: 0.45)) {
             flashOpacity = 0.0

@@ -232,7 +232,7 @@ struct LetterScrapPuzzleView: View {
         if let selectedTileID,
            let availableIndex = availableTiles.firstIndex(where: { $0.id == selectedTileID }) {
             
-            SoundManager.shared.play(.paperNote, volume: 0.35)
+            SoundManager.shared.play(.tap, volume: 0.35)
             HapticsManager.shared.lightTap()
             
             let selectedTile = availableTiles.remove(at: availableIndex)

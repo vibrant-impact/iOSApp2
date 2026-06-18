@@ -42,7 +42,7 @@ struct BigfootLairBlackoutView: View {
         }
         .onAppear {
             SoundManager.shared.play(.blackoutRumble, volume: 0.65)
-            withAnimation(.easeInOut(duration: 1.0)) {
+            withAnimation(.easeInOut(duration: 2.0)) {
                 opacity = 1.0
             }
             
@@ -52,7 +52,7 @@ struct BigfootLairBlackoutView: View {
                 }
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.7) {
                 withAnimation(.easeInOut(duration: 1.8)) {
                     finalMessageOpacity = 1.0
                 }

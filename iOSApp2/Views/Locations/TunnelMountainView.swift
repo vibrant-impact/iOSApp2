@@ -125,10 +125,12 @@ struct TunnelMountainView: View {
         
         .onAppear {
             SoundManager.shared.stopAllAmbience()
-            SoundManager.shared.playAmbience(.mountainWind, volume: 1.0)
+            SoundManager.shared.playAmbience(.snowyExterior, volume: 1.0)
         }
+        
         .onDisappear {
-            SoundManager.shared.stopAmbience(.mountainWind)
+            SoundManager.shared.play(.locationTravel, volume: 0.45)
+            SoundManager.shared.stopAmbience(.snowyExterior)
         }
         
         .sheet(isPresented: $showingInventory) {

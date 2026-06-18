@@ -62,6 +62,16 @@ struct BigfootLairView: View {
         .onAppear {
             runWakeUpSequence()
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.caveDrip, volume: 1.0)
+        }
+        
+        .onDisappear {
+            SoundManager.shared.stopAmbience(.caveDrip)
+        }
+        
         .fullScreenCover(isPresented: $showingBigfootCamera) {
             BigfootEvidenceCameraView {
                 gameState.hasTakenBigfootEvidencePhoto = true

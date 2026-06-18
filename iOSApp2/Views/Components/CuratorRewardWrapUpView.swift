@@ -12,6 +12,8 @@ struct CuratorRewardWrapUpView: View {
     @EnvironmentObject private var gameState: GameState
     @Environment(\.dismiss) private var dismiss
     
+    @State private var showingExitConfirmation = false
+    
     var body: some View {
         VStack(spacing: 22) {
             Text("The Museum is Saved")
@@ -22,6 +24,7 @@ struct CuratorRewardWrapUpView: View {
             storyCard
             
             Button {
+                SoundManager.shared.play(.close, volume: 0.45)
             } label: {
                 Label("Enter $5000 Grand Prize Draw", systemImage: "paperplane.fill")
                     .padding(8)
@@ -31,16 +34,37 @@ struct CuratorRewardWrapUpView: View {
             rewardsCard
             
             Button {
+                SoundManager.shared.play(.tap, volume: 0.45)
+                showingExitConfirmation = true
             } label: {
                 Label("Exit", systemImage: "gobackward")
             }
             .buttonStyle(.borderedProminent)
-            
-            
         }
         .padding(.bottom, 40)
-        .onAppear {
+        .alert("Exit Game?", isPresented: $showingExitConfirmation) {
+            Button("Start Over", role: .destructive) {
+                exitToWelcomeAndReset()
+            }
+            
+            Button("Cancel", role: .cancel) {
+                SoundManager.shared.play(.close, volume: 0.45)
+            }
+        } message: {
+            Text("This will clear your progress and return you to the welcome screen.")
         }
+    }
+    
+    
+    // MARK: - Exit
+    
+    private func exitToWelcomeAndReset() {
+        SoundManager.shared.play(.locationTravel, volume: 0.7)
+        HapticsManager.shared.lightTap()
+        
+        gameState.resetForNewGame()
+        
+        dismiss()
     }
     
     

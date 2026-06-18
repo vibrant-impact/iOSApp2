@@ -108,6 +108,17 @@ struct DowntownBanffView: View {
                 }
             }
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.townStreet, volume: 1.0)
+        }
+        
+        .onDisappear {
+            SoundManager.shared.play(.locationTravel, volume: 0.45)
+            SoundManager.shared.stopAmbience(.townStreet)
+        }
+        
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)

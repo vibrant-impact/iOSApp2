@@ -147,7 +147,6 @@ struct MuseumExteriorView: View {
         }
         .alert("Your head aches.", isPresented: $isShowingHeadHurtsAlert) {
             Button("Check Pocket") {
-                SoundManager.shared.play(.paperNote, volume: 0.45)
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -156,9 +155,6 @@ struct MuseumExteriorView: View {
                 }
             }
             
-            Button("Keep Exploring", role: .cancel) {
-                SoundManager.shared.play(.close, volume: 0.45)
-            }
         } message: {
             Text("""
             Cold stone. Falling ice. A shadow in the dark.
@@ -481,7 +477,7 @@ struct MuseumExteriorView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                SoundManager.shared.play(.paperNote, volume: 0.35)
+                SoundManager.shared.play(.tap, volume: 0.35)
                 isShowingHeadHurtsAlert = true
             }
         }

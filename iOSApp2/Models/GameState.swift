@@ -407,6 +407,81 @@ final class GameState: ObservableObject {
         
         return cleanedAnswer == curatorAnswer
     }
+    
+    // MARK: - Reset Game
+
+    func resetForNewGame() {
+        // App State
+        hasStartedGame = false
+        currentLocation = .museumExterior
+        
+        // Museum Exterior
+        hasOpenedMailbox = false
+        hasReadMailboxNote = false
+        hasCollectedShovel = false
+        isMuseumDoorUnlocked = false
+        hasSeenReturnFromLairMessage = false
+        
+        // Bow Falls
+        hasCollectedGaffHook = false
+        hasOpenedFallsCanister = false
+        hasCollectedWoodenMatches = false
+        
+        // Cave and Basin
+        hasOpenedBasinChest = false
+        hasCollectedVintageBrassToken = false
+        
+        // Banff Springs Hotel
+        hasPhotographedGhostBride = false
+        hasFoundCafeLead = false
+        
+        // Downtown Banff
+        hasEnteredSnowyOwlCafe = false
+        hasTradedVintageBrassToken = false
+        hasCollectedObservatoryStoryLead = false
+        
+        // Upper Hot Springs
+        hasCollectedObservatoryLockerKey = false
+        
+        // Sulphur Mountain
+        hasMeltedWeatherStationDoorIce = false
+        
+        // Observatory Interior
+        hasReadObservatoryLogbook = false
+        hasCollectedObservatoryJournalLead = false
+        hasOpenedObservatoryLocker = false
+        hasCollectedRustyCrowbar = false
+        
+        // Lake Minnewanka
+        hasOpenedMinnewankaCrate = false
+        hasCollectedWoodcuttersAxe = false
+        
+        // Tunnel Mountain
+        hasBrokenCaveEntranceBoards = false
+        hasTriggeredIcicleFall = false
+        
+        // Bigfoot's Lair
+        hasWokenInBigfootLair = false
+        hasInspectedLairExit = false
+        hasMetBigfootFamily = false
+        hasInspectedLostLemonMine = false
+        hasTakenBigfootEvidencePhoto = false
+        hasEscapedBigfootLair = false
+        hasReturnedFromBigfootLair = false
+        hasFoundGoldNuggetInPocket = false
+        hasSpokenToCuratorAfterLair = false
+        shouldShowMuseumWakeUpAfterLair = false
+        
+        // Inventory
+        collectedInventoryItemIDs.removeAll()
+        usedInventoryItemIDs.removeAll()
+        
+        // Journal Photos
+        photoIDs.removeAll()
+        
+        // Sounds
+        SoundManager.shared.stopAllAmbience()
+    }
 }
     
     

@@ -51,7 +51,6 @@ struct PocketGoldNuggetOverlay: View {
                 .opacity(textOpacity)
                 
                 Button {
-                    SoundManager.shared.play(.itemCollect, volume: 0.85)
                     HapticsManager.shared.success()
                     onAddToInventory()
                 } label: {

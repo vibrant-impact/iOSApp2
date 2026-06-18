@@ -93,6 +93,17 @@ struct SulphurMountainView: View {
                 zoomOverlay(for: activeZoomOverlay)
             }
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.snowyExterior, volume: 1.0)
+        }
+        
+        .onDisappear {
+            SoundManager.shared.play(.locationTravel, volume: 0.45)
+            SoundManager.shared.stopAmbience(.snowyExterior)
+        }
+        
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)

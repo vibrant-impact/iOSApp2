@@ -23,6 +23,7 @@ enum GameSound {
     case curatorSuccess
     case curatorWrong
     case click
+    case chopWood
     case locationTravel
     case nuggetReveal
     
@@ -56,6 +57,8 @@ enum GameSound {
             return "lair_wakeup.wav"
         case .locationTravel:
             return "return.wav"
+        case .chopWood:
+            return "axe_chop.wav"
         case .nuggetReveal:
             return "nugget_reveal.wav"
         case .curatorSuccess:

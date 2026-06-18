@@ -125,6 +125,17 @@ struct CaveAndBasinView: View {
                 }
             }
         }
+        
+        .onAppear {
+            SoundManager.shared.stopAllAmbience()
+            SoundManager.shared.playAmbience(.caveDrip, volume: 1.0)
+        }
+        
+        .onDisappear {
+            SoundManager.shared.play(.locationTravel, volume: 0.45)
+            SoundManager.shared.stopAmbience(.caveDrip)
+        }
+        
         .sheet(isPresented: $showingInventory) {
             InventoryView()
                 .environmentObject(gameState)

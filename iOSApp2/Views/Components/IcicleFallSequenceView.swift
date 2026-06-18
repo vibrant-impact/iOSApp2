@@ -85,23 +85,27 @@ struct IcicleFallSequenceView: View {
     }
     
     
-    // MARK: - Sequence
+    // MARK: - Sequence SoundManager.shared.play(.chopWood, volume: 1.0)
     
     private func runSequence(screenHeight: CGFloat) {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                SoundManager.shared.play(.chopWood, volume: 0.9)
+            }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.95) {
                 SoundManager.shared.play(.iceCrack, volume: 0.9)
             }
         
         // Beat 1: pause so the player sees the cave.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.15) {
             withAnimation(.easeInOut(duration: 0.25)) {
                 icicleOpacity = 1.0
             }
         }
         
         // Beat 2: icicle drops.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.15) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.75) {
             withAnimation(.easeIn(duration: 0.55)) {
                 icicleY = screenHeight * 0.50
                 icicleX = -18
@@ -110,7 +114,7 @@ struct IcicleFallSequenceView: View {
         }
         
         // Beat 3: impact flash.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.63) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.03) {
             SoundManager.shared.play(.icicleCrash, volume: 1.0)
             HapticsManager.shared.heavyImpact()
             
@@ -120,7 +124,7 @@ struct IcicleFallSequenceView: View {
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.78) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.18) {
             SoundManager.shared.play(.blackoutRumble, volume: 0.65)
             
             withAnimation(.easeOut(duration: 0.38)) {
@@ -129,26 +133,26 @@ struct IcicleFallSequenceView: View {
         }
         
         // Beat 4: stronger shake.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.64) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.04) {
             shakeScene()
         }
         
         // Beat 5: blackout after the player has time to feel the impact.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.15) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.66) {
             withAnimation(.easeInOut(duration: 0.75)) {
                 blackoutOpacity = 1.0
             }
         }
         
         // Beat 6: text appears after blackout.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.95) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.75) {
             withAnimation(.easeInOut(duration: 0.7)) {
                 textOpacity = 1.0
             }
         }
         
         // Beat 7: move to lair.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7.8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.1) {
             onFinished()
         }
     }
