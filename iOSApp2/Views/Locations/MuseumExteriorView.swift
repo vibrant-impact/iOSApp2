@@ -329,18 +329,12 @@ struct MuseumExteriorView: View {
                 title: "The Curator's Note",
                 imageName: "zoom_museum_mailbox_open",
                 description: """
-                Welcome to Banff.
-
-                I am glad your camera is ready, because this museum is running out of time.
-
                 Make your way through Banff and gather what you need to write the ultimate story — one that can revive public interest and save the museum from closure.
 
                 I believe you are the one who can answer the question I never could:
-
                 Who guards the Lost Lemon Mine?
 
                 History holds the key to the door.
-
                 — The Museum Curator
                 """,
                 

@@ -206,7 +206,7 @@ struct ObservatoryView: View {
         case .logbook:
             HotspotZoomOverlay(
                 title: "Sanson's Logbook",
-                imageName: "zoom_observatory_logbook", // Assumes a zoom asset for the logbook
+                imageName: "zoom_observatory_logbook", 
                 description: """
                 The logbook is full of weather notes, summit conditions, and tiny sketches in the margins.
 
